@@ -1,0 +1,24 @@
+{
+  "version": 0,
+  "id": "legacy_revenue",
+  "name": "Legacy Revenue",
+  "description": "A realistic pre-versioned analytics project.",
+  "domain": "Revenue",
+  "owners": ["finance@example.com"],
+  "tables": [
+    {
+      "name": "analytics.fct_orders",
+      "description": "One row per order.",
+      "columns": [{ "name": "order_id", "type": "varchar" }]
+    }
+  ],
+  "metrics": [
+    {
+      "name": "MRR",
+      "formula": "sum(monthly_amount)",
+      "table": "analytics.fct_orders",
+      "grain": "month",
+      "workedExample": "$100 January recurring charge produces $100 January MRR."
+    }
+  ]
+}

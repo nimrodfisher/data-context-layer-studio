@@ -1,0 +1,27 @@
+{
+  "name": "@context-layer/agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run --root ../.. packages/agent/src",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@context-layer/core": "workspace:*",
+    "@context-layer/sources": "workspace:*",
+    "zod": "^4.4.3"
+  }
+}

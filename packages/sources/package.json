@@ -1,0 +1,29 @@
+{
+  "name": "@context-layer/sources",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run --root ../.. packages/sources/src",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@context-layer/core": "workspace:*",
+    "csv-parse": "^6.1.0",
+    "ipaddr.js": "^2.4.0",
+    "yaml": "^2.8.1",
+    "zod": "^4.4.3"
+  }
+}
