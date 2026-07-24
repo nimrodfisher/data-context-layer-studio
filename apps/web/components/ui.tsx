@@ -24,7 +24,7 @@ export function SectionIntro({
     <header className="section-intro">
       <div>
         <span className="section-number">{number}</span>
-        <p className="eyebrow">Author canonical context</p>
+        <p className="eyebrow">Build context</p>
         <h1>{title}</h1>
         <p className="lede">{description}</p>
       </div>

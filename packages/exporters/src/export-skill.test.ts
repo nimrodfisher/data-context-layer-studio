@@ -1,7 +1,13 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
-import { createSkillZip, domainSlug, exportSkillFiles } from './export-skill.js';
+import {
+  createSkillZip,
+  createSkillZipFromFiles,
+  domainSlug,
+  exportSkillFiles,
+  mergePolishedSkillFiles,
+} from './export-skill.js';
 import { createCanonicalProject } from './test-fixtures.js';
 
 const REQUIRED_SUFFIXES = [
@@ -119,5 +125,45 @@ describe('createSkillZip', () => {
       expect(entry, path).toBeTruthy();
       await expect(entry!.async('string')).resolves.toBe(contents);
     }
+  });
+});
+
+describe('mergePolishedSkillFiles', () => {
+  it('applies polished overlays and keeps required files', () => {
+    const project = createCanonicalProject();
+    const slug = domainSlug(project);
+    const baseline = exportSkillFiles(project);
+    const merged = mergePolishedSkillFiles({
+      slug,
+      baseline,
+      polished: {
+        'SKILL.md': '# Clearer skill\n\nStructured for analysts.\n',
+        '../escape.md': 'nope',
+        'unknown/path.md': 'nope',
+      },
+    });
+
+    expect(merged.applied).toContain('SKILL.md');
+    expect(merged.skipped).toEqual(expect.arrayContaining(['../escape.md', 'unknown/path.md']));
+    expect(merged.files[`${slug}/SKILL.md`]).toContain('Clearer skill');
+    for (const suffix of REQUIRED_SUFFIXES) {
+      expect(merged.files[`${slug}/${suffix}`]?.trim()).toBeTruthy();
+    }
+  });
+
+  it('createSkillZipFromFiles packs the polished map', async () => {
+    const project = createCanonicalProject();
+    const slug = domainSlug(project);
+    const baseline = exportSkillFiles(project);
+    const { files } = mergePolishedSkillFiles({
+      slug,
+      baseline,
+      polished: { 'guardrails.md': '# Guardrails\n\nBe precise.\n' },
+    });
+    const bytes = await createSkillZipFromFiles(files);
+    const zip = await JSZip.loadAsync(bytes);
+    await expect(zip.file(`${slug}/guardrails.md`)!.async('string')).resolves.toContain(
+      'Be precise.',
+    );
   });
 });

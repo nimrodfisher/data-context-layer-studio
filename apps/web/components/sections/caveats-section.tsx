@@ -3,7 +3,9 @@
 import type { CanonicalProject, TargetReference } from '@context-layer/core';
 import { useState } from 'react';
 
+import { applyDraftToSection } from '../../lib/ingest';
 import { deleteBlockers, entityId, provenanceForEvidence, touchProject } from '../../lib/project';
+import { ContextIngest } from '../context-ingest';
 import {
   CollectionHeader,
   EmptyState,
@@ -60,7 +62,7 @@ export function CaveatsSection({ project, onChange, onEvidenceSelect, onNotice }
       <SectionIntro
         number="06"
         title="Make caveats impossible to miss"
-        description="Record where a limitation applies, what can go wrong, and the action a reader should take. Severity controls attention—not truth."
+        description="Drop known-issue notes, paste free text, or ask the agent to draft caveats from context. Severity still controls attention—not truth."
         aside={
           <div className="principle-note amber">
             <span>Signal rule</span>
@@ -69,6 +71,15 @@ export function CaveatsSection({ project, onChange, onEvidenceSelect, onNotice }
             </p>
           </div>
         }
+      />
+
+      <ContextIngest
+        project={project}
+        section="caveats"
+        onChange={onChange}
+        onNotice={onNotice ?? (() => undefined)}
+        applyLabel="Apply as caveat note"
+        onApplyDraft={(draft) => onChange(applyDraftToSection(project, 'caveats', draft))}
       />
       <section className="author-section">
         <CollectionHeader

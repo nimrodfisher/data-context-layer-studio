@@ -3,7 +3,9 @@
 import type { CanonicalProject } from '@context-layer/core';
 import { useState } from 'react';
 
+import { applyDraftToSection } from '../../lib/ingest';
 import { deleteBlockers, entityId, provenanceForEvidence, touchProject } from '../../lib/project';
+import { ContextIngest } from '../context-ingest';
 import {
   CollectionHeader,
   EmptyState,
@@ -45,13 +47,22 @@ export function MetricsSection({ project, onChange, onEvidenceSelect, onNotice }
       <SectionIntro
         number="05"
         title="Define metrics people can trust"
-        description="A usable metric includes meaning, grain, ownership, a worked example, and the assets that make it computable."
+        description="Drop metric specs, paste definitions, or ask the agent to draft from attached context. Refine ownership and grain afterward."
         aside={
           <div className="principle-note">
             <span>Metric rule</span>
             <p>Keep a metric proposed until its owner confirms both the definition and grain.</p>
           </div>
         }
+      />
+
+      <ContextIngest
+        project={project}
+        section="metrics"
+        onChange={onChange}
+        onNotice={onNotice ?? (() => undefined)}
+        applyLabel="Apply as proposed metric"
+        onApplyDraft={(draft) => onChange(applyDraftToSection(project, 'metrics', draft))}
       />
 
       <section className="author-section">

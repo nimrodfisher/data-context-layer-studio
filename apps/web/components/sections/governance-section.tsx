@@ -3,7 +3,9 @@
 import type { CanonicalProject } from '@context-layer/core';
 import { useState } from 'react';
 
+import { applyDraftToSection } from '../../lib/ingest';
 import { deleteBlockers, entityId, provenanceForEvidence, touchProject } from '../../lib/project';
+import { ContextIngest } from '../context-ingest';
 import {
   CollectionHeader,
   EmptyState,
@@ -44,13 +46,22 @@ export function GovernanceSection({ project, onChange, onEvidenceSelect, onNotic
       <SectionIntro
         number="07"
         title="Make access intent explicit"
-        description="Classifications describe sensitivity. Policies describe the rule, accountable owner, and assets it governs."
+        description="Drop policy docs, paste rules, or ask the agent to draft classifications and policies from context. We generate governance metadata — not an approval workflow."
         aside={
           <div className="principle-note">
             <span>Governance rule</span>
             <p>Labels without asset scope or accountable owners are warnings, not controls.</p>
           </div>
         }
+      />
+
+      <ContextIngest
+        project={project}
+        section="governance"
+        onChange={onChange}
+        onNotice={onNotice ?? (() => undefined)}
+        applyLabel="Apply as policy draft"
+        onApplyDraft={(draft) => onChange(applyDraftToSection(project, 'governance', draft))}
       />
 
       <section className="author-section">

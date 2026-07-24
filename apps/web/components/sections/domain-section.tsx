@@ -2,7 +2,9 @@
 
 import type { CanonicalProject } from '@context-layer/core';
 
+import { applyDraftToSection } from '../../lib/ingest';
 import { deleteBlockers, entityId, humanProvenance, touchProject } from '../../lib/project';
+import { ContextIngest } from '../context-ingest';
 import { CollectionHeader, Field, SectionIntro, TextInput } from '../ui';
 
 interface Props {
@@ -32,13 +34,22 @@ export function DomainSection({ project, onChange, onNotice }: Props) {
       <SectionIntro
         number="01"
         title="Set the domain boundary"
-        description="Name the decision space before you document its data. Clear boundaries keep downstream answers from quietly expanding beyond their authority."
+        description="Name the decision space, then drop briefs or ask the agent to draft from them. Clear boundaries keep later answers from drifting."
         aside={
           <div className="principle-note">
             <span>Why this matters</span>
             <p>Every metric, policy, and caveat inherits this domain’s scope.</p>
           </div>
         }
+      />
+
+      <ContextIngest
+        project={project}
+        section="domain"
+        onChange={onChange}
+        onNotice={onNotice ?? (() => undefined)}
+        applyLabel="Apply draft to description"
+        onApplyDraft={(draft) => onChange(applyDraftToSection(project, 'domain', draft))}
       />
 
       <section className="author-section" aria-labelledby="domain-identity">

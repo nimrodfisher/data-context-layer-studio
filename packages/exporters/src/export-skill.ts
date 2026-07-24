@@ -74,13 +74,102 @@ export function exportSkillFiles(project: CanonicalProject): Record<string, stri
 }
 
 export async function createSkillZip(project: CanonicalProject): Promise<Uint8Array> {
-  const files = exportSkillFiles(project);
+  return createSkillZipFromFiles(exportSkillFiles(project));
+}
+
+/** Pack an already-built skill file map (paths → contents) into a ZIP. */
+export async function createSkillZipFromFiles(
+  files: Record<string, string>,
+): Promise<Uint8Array> {
   const zip = new JSZip();
   for (const [path, contents] of Object.entries(files)) {
-    zip.file(path, contents);
+    const normalized = path.replace(/\\/g, '/').replace(/^\/+/, '');
+    if (!normalized || normalized.includes('..')) {
+      throw new Error(`Unsafe skill path rejected: ${path}`);
+    }
+    zip.file(normalized, contents.endsWith('\n') ? contents : `${contents}\n`);
   }
-  const buffer = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
-  return buffer;
+  return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+}
+
+/** Relative paths that every skill ZIP must include (under the domain slug). */
+export const REQUIRED_SKILL_RELATIVE_PATHS = [
+  'SKILL.md',
+  'guardrails.md',
+  'product_context/_index.md',
+  'product_context/overview.md',
+  'product_context/user-segments.md',
+  'product_context/lifecycle.md',
+  'product_context/glossary.md',
+  'data_context/_index.md',
+  'data_context/metrics.yml',
+  'data_context/caveats.md',
+  'data_context/semantic_layer/_index.md',
+  'data_context/table_profiling/_index.md',
+  'data_context/verified_queries/_index.md',
+  'data_context/verified_queries/verified_queries.yml',
+  'recent_updates/_index.md',
+  'recent_updates/INGESTION.md',
+] as const;
+
+/**
+ * Merge LLM-polished relative files onto a deterministic baseline.
+ * Baseline keys are `${slug}/relative`. Overlay keys may be relative or prefixed.
+ */
+export function mergePolishedSkillFiles(options: {
+  slug: string;
+  baseline: Record<string, string>;
+  polished: Record<string, string>;
+}): { files: Record<string, string>; applied: string[]; skipped: string[] } {
+  const prefix = `${options.slug}/`;
+  const files = { ...options.baseline };
+  const applied: string[] = [];
+  const skipped: string[] = [];
+  const allowed = new Set(
+    Object.keys(options.baseline).map((path) =>
+      path.startsWith(prefix) ? path.slice(prefix.length) : path,
+    ),
+  );
+
+  for (const [rawPath, contents] of Object.entries(options.polished)) {
+    if (typeof contents !== 'string' || !contents.trim()) {
+      skipped.push(rawPath);
+      continue;
+    }
+    const relative = rawPath
+      .replace(/\\/g, '/')
+      .replace(/^\/+/, '')
+      .replace(new RegExp(`^${options.slug}/`), '');
+    if (!relative || relative.includes('..') || relative.startsWith('/')) {
+      skipped.push(rawPath);
+      continue;
+    }
+    if (!allowed.has(relative) && !isOptionalSkillRelativePath(relative)) {
+      skipped.push(relative);
+      continue;
+    }
+    const full = `${prefix}${relative}`;
+    files[full] = contents.endsWith('\n') ? contents : `${contents}\n`;
+    applied.push(relative);
+  }
+
+  for (const required of REQUIRED_SKILL_RELATIVE_PATHS) {
+    const full = `${prefix}${required}`;
+    if (!files[full]?.trim()) {
+      const fallback = options.baseline[full];
+      if (fallback) files[full] = fallback;
+    }
+  }
+
+  return { files, applied, skipped };
+}
+
+function isOptionalSkillRelativePath(relative: string): boolean {
+  return (
+    /^data_context\/semantic_layer\/[A-Za-z0-9_]+\.yml$/.test(relative) ||
+    /^data_context\/table_profiling\/[A-Za-z0-9_]+\.md$/.test(relative) ||
+    /^recent_updates\/updates\/\d{4}-\d{2}\.md$/.test(relative)
+  );
 }
 
 function slugify(value: string, fallback: string): string {

@@ -3,7 +3,9 @@
 import type { CanonicalProject } from '@context-layer/core';
 import { useState } from 'react';
 
+import { applyDraftToSection } from '../../lib/ingest';
 import { deleteBlockers, entityId, provenanceForEvidence, touchProject } from '../../lib/project';
+import { ContextIngest } from '../context-ingest';
 import {
   CollectionHeader,
   EmptyState,
@@ -55,13 +57,22 @@ export function DataSection({ project, onChange, onEvidenceSelect, onNotice }: P
       <SectionIntro
         number="04"
         title="Map the data surface"
-        description="Describe assets at the grain people reason about, then make join paths explicit. The map documents semantics; it does not execute queries."
+        description="Drop schema notes or warehouse docs, paste free text, or ask the agent to propose assets and joins from that context."
         aside={
           <div className="principle-note">
             <span>Modeling rule</span>
             <p>Grain answers “what does one row represent?” before any metric is defined.</p>
           </div>
         }
+      />
+
+      <ContextIngest
+        project={project}
+        section="data"
+        onChange={onChange}
+        onNotice={onNotice ?? (() => undefined)}
+        applyLabel="Apply as recent update"
+        onApplyDraft={(draft) => onChange(applyDraftToSection(project, 'data', draft))}
       />
 
       <section className="author-section">

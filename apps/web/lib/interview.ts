@@ -97,7 +97,7 @@ const INTERVIEW_PLAN: InterviewPrompt[] = [
     question:
       'Where should I look for this domain’s name, purpose, and decision boundaries? For example a domain brief, product one-pager, or Notion page.',
     whyItMatters:
-      'Domain identity anchors every later field. If we start from the wrong charter, metrics and policies drift outside their authority.',
+      'Domain identity anchors every later field. If we start from the wrong charter, metrics and policies drift.',
     expectedSourceKinds: DOC_KINDS,
     acceptanceHints: [
       'Point to a brief that names the domain and what decisions it supports.',
@@ -125,7 +125,7 @@ const INTERVIEW_PLAN: InterviewPrompt[] = [
     question:
       'What are the primary sources of truth for this domain’s context—docs, warehouse MCP, APIs, or dbt?',
     whyItMatters:
-      'Sources establish authority before we collect evidence. A configured connector is not collected until an adapter returns records.',
+      'Sources attach the context and tools you will reason over. Drop files, paste notes, or use MCP from Cursor.',
     expectedSourceKinds: ALL_SOURCE_KINDS,
     acceptanceHints: [
       'Name the playbook, Snowflake MCP server, OpenAPI URL, or dbt project.',

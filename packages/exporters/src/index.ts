@@ -1,1 +1,8 @@
-export { createSkillZip, domainSlug, exportSkillFiles } from './export-skill.js';
+export {
+  REQUIRED_SKILL_RELATIVE_PATHS,
+  createSkillZip,
+  createSkillZipFromFiles,
+  domainSlug,
+  exportSkillFiles,
+  mergePolishedSkillFiles,
+} from './export-skill.js';

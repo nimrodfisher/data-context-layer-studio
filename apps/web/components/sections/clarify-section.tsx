@@ -128,9 +128,7 @@ export function ClarifySection({ project, onChange, onEvidenceSelect, onNotice }
                     <span className="status-dot warning" />
                     <p>
                       <strong>{source.sourceName}</strong>
-                      <small>
-                        {source.authority} · freshness limit {source.maxAgeHours}h
-                      </small>
+                      <small>Source context for this question</small>
                     </p>
                   </div>
                 ))}

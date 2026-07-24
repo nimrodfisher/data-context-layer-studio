@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   addCollectedEvidence,
   claimStatusForEvidence,
+  claudeBuildBlocked,
+  claudeBuildChecklist,
   computeCompleteness,
   createBlankProject,
   deleteBlockers,
@@ -56,6 +58,41 @@ describe('guided project state', () => {
     expect(result.domain.state).toBe('complete');
     expect(result.business.completed).toBeGreaterThan(0);
     expect(result.metrics.state).toBe('empty');
+  });
+
+  it('blocks Claude build until required context pieces exist', () => {
+    const blank = createBlankProject('Customer health');
+    expect(claudeBuildBlocked(blank)).toBe(true);
+
+    const ready = createBlankProject('Customer health');
+    ready.domain.identity.description = 'Weekly account health for CS leaders.';
+    ready.domain.boundaries.push({
+      text: 'Account-level health only',
+      provenance: { evidenceIds: [], sourceId: 'source-analyst-input', method: 'human' },
+    });
+    ready.evidence.push({
+      id: 'evidence-brief',
+      sourceId: 'source-analyst-input',
+      kind: 'document',
+      locator: 'inline:brief',
+      retrievedAt: '2026-07-22T10:00:00.000Z',
+      confidence: 0.9,
+      excerpt: 'Health combines usage and support load.',
+    });
+    ready.productContext.summary = 'Healthy accounts need fewer escalations.';
+    ready.data.assets.push({
+      id: 'asset-placeholder',
+      name: 'account_health',
+      kind: 'model',
+      sourceId: 'source-analyst-input',
+      ownerIds: [],
+      evidenceIds: [],
+      provenance: { evidenceIds: [], sourceId: 'source-analyst-input', method: 'human' },
+      columns: [],
+    });
+
+    expect(claudeBuildChecklist(ready).find((item) => !item.ready)).toBeUndefined();
+    expect(claudeBuildBlocked(ready)).toBe(false);
   });
 
   it('keeps navigation state separate from canonical project data', () => {

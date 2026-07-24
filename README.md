@@ -2,9 +2,16 @@
 
 **Give your AI agents a governed, domain-true context layer — built by the data team, not guessed by the model.**
 
-Data Context Layer Studio is a local-first open-source workbench for analytics and data teams. You interview the sources that already hold your business meaning (docs, warehouse MCPs, APIs, dbt artifacts), capture definitions and caveats with clear ownership, and export a complete Cursor/Claude **domain skill** as a ZIP.
+Data Context Layer Studio helps analytics and data teams turn scattered tribal knowledge (docs, warehouse MCPs, APIs, dbt) into a portable **Cursor / Claude domain skill**.
 
-No hosted account. No telemetry. Your warehouse credentials and MCP configs stay on your machine.
+Two ways to build that skill (same output shape):
+
+| Mode | Status | Best for |
+| --- | --- | --- |
+| **Workbench UI** | Available now | Analysts who want a guided checklist so no context piece is skipped, then Claude Code writes the skill |
+| **Conversational onboarding skill** | Coming soon | Teams who prefer Claude interviewing them in chat and creating the skill during the conversation |
+
+No hosted account. No telemetry. Credentials and MCP configs stay on your machine.
 
 <p align="center">
   <img src="docs/images/workbench-review.png" alt="Lineage Workbench review screen showing section completeness, validation, and provenance coverage" width="900" />
@@ -12,6 +19,7 @@ No hosted account. No telemetry. Your warehouse credentials and MCP configs stay
 
 <p align="center">
   <a href="#quick-start"><strong>Quick start</strong></a> ·
+  <a href="#try-the-claude-code-build"><strong>Try Claude Code build</strong></a> ·
   <a href="#what-you-get"><strong>What you get</strong></a> ·
   <a href="#how-it-works"><strong>How it works</strong></a> ·
   <a href="#privacy"><strong>Privacy</strong></a> ·
@@ -32,12 +40,16 @@ Data teams already know the truth. It’s scattered across Slack threads, dbt do
 | Schema guesses drift from the warehouse | Sources and evidence stay provenance-linked |
 | Caveats live in someone’s head | Caveats travel with the answer path |
 | Every domain is a one-off markdown dump | Every domain exports the same skill shape |
+| Copy a template into Claude and hope nothing was skipped | Guided UI checklist, then Claude Code rewrites the skill |
 
 ---
 
 ## Quick start
 
-**Requirements:** Node.js 22+ and [pnpm](https://pnpm.io) via Corepack.
+**Requirements**
+
+- Node.js 22+ and [pnpm](https://pnpm.io) via Corepack  
+- Optional for polished export: [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and logged in on **the same machine** that runs the app  
 
 ```sh
 git clone https://github.com/nimrodfisher/data-context-layer-studio.git
@@ -49,14 +61,42 @@ corepack pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-That’s enough to:
-
 1. Start on **Chat** and answer where each piece of context lives  
-2. Refine Domain → Sources → Business → Data → Metrics → Caveats → Governance  
-3. Run **Clarify** / **Review**  
-4. Click **Download skill ZIP**
+2. Refine Domain → Sources → Business → Data → Metrics → Caveats → Governance (drop files, paste notes, or ask the agent per section)  
+3. Run **Clarify** / **Review** until the Claude Code checklist is green  
+4. Click **Build skill with Claude Code** — or **Download raw ZIP** if you only want the deterministic template fill  
 
-Optional: connect a local OpenAI-compatible model (Ollama, LM Studio) using the commented vars in [`.env.example`](.env.example). Chat and interview work without a model.
+---
+
+## Try the Claude Code build
+
+Use this when you want Claude Code to **rewrite** the gathered context into a clear skill (not a dump into folders).
+
+1. Confirm Claude Code works in a terminal on this machine:
+
+   ```sh
+   # Windows
+   where claude
+
+   # macOS / Linux
+   which claude
+   ```
+
+   If that fails, install/login Claude Code, or set `CONTEXT_LAYER_CLAUDE_BIN` in `.env.local` (see [`.env.example`](.env.example)).
+
+2. In the workbench, gather at least:
+
+   - Domain name, real description, and a boundary / inclusion / exclusion  
+   - One attached context piece (markdown file, paste, or source)  
+   - Business summary, terms, claims, or goals  
+   - One asset, metric, caveat, or recent update  
+
+3. Open **Review** → complete the **Claude Code checklist** → **Build skill with Claude Code**.  
+4. Wait for the job (builds under `.context-layer-data/builds/`), preview `SKILL.md` / overview, then **Download Claude skill ZIP**.  
+
+**Note:** The Next.js server shells out to `claude -p`. Claude Code must be available to that process (same machine as `pnpm dev`), not only on another laptop.
+
+Without Claude Code, **Download raw ZIP** still works.
 
 ---
 
@@ -88,14 +128,13 @@ Drop it into your agent skills directory (for example Cursor project skills) and
 Sources you already have
    │  markdown · paste · Cursor MCP · API · dbt (optional)
    ▼
-Chat + guided authoring
-   │  ask where context lives · capture meaning · keep provenance
+Chat + guided authoring (checklist so nothing is skipped)
+   │
    ▼
-Canonical project (local)
-   │  validate · clarify ambiguities · save/load JSON
-   ▼
-Export skill ZIP
-      Cursor/Claude-compatible domain pack
+Canonical project (local validate · clarify · save/load)
+   │
+   ├─► Claude Code build pack → claude -p → polished skill ZIP
+   └─► Raw deterministic ZIP (no Claude required)
 ```
 
 ### Chat + MCP connectors
@@ -112,11 +151,11 @@ Secrets in MCP configs are used **server-side only** and never written into the 
 
 ### Forms when you need precision
 
-Every interview answer can be refined in the workbench steps: domain boundary and owners, source registry, business terms and claims, assets and joins, metrics, caveats, and governance policies.
+Every section supports the same three moves: drop markdown, paste free text, or ask the in-app agent to draft from attached context. Refine ownership, grain, and caveats in the forms when you need precision.
 
-### Clarification before export
+### Clarification before Claude Code builds the skill
 
-Deterministic validation flags missing ownership, grain, dangling references, unsupported claims, and freshness issues. Resolve them in **Clarify**, then export when the structure is sound.
+Deterministic validation flags missing ownership, grain, dangling references, unsupported claims, and freshness issues. Resolve them in **Clarify**, complete the Review checklist, then **Build skill with Claude Code**. The app writes a local pack under `.context-layer-data/builds/` and runs your installed Claude Code CLI to produce the polished skill.
 
 ---
 
@@ -128,7 +167,8 @@ Designed for data teams that cannot send warehouse context to a SaaS:
 - No required login, database, or telemetry
 - Project files stay under a local workspace (default `.context-layer-data/`)
 - Credential values are redacted from exports and API responses
-- Optional LLM calls go only to the endpoint **you** configure
+- Optional in-app drafting goes only to the OpenAI-compatible endpoint **you** configure
+- Skill polish uses **Claude Code on your machine**, not a hosted studio LLM
 
 ---
 
@@ -176,7 +216,10 @@ Want a new connector? Start from `packages/sources` and register it with the ada
 
 - [x] Local workbench + canonical model  
 - [x] Chat onboarding + Cursor MCP discovery  
+- [x] Per-section file / paste / agent ingest  
 - [x] Skill ZIP export matching the domain template  
+- [x] Claude Code handoff (checklist → build pack → `claude -p` → polished ZIP)  
+- [ ] **Conversational onboarding skill** — Claude interviews the analyst and creates the skill in chat (same output shape as the UI)  
 - [ ] Connected skill testing (ask business questions, inspect traces)  
 - [ ] Richer live MCP auth flows (OAuth-backed servers)  
 - [ ] Contributor docs, examples pack, and release automation  

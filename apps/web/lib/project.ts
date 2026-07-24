@@ -234,6 +234,85 @@ export function computeCompleteness(project: CanonicalProject) {
   };
 }
 
+export interface ClaudeBuildChecklistItem {
+  id: string;
+  label: string;
+  ready: boolean;
+  hint: string;
+}
+
+/** Required pieces before Claude Code may write the skill. */
+export function claudeBuildChecklist(project: CanonicalProject): ClaudeBuildChecklistItem[] {
+  const defaultDescription = 'Define what this domain covers and why it exists.';
+  const defaultSummary = 'Describe the business context this project should preserve.';
+  const authoredSources = project.sources.filter(({ id }) => id !== 'source-analyst-input');
+  const hasContext =
+    project.evidence.length > 0 ||
+    authoredSources.length > 0 ||
+    Boolean(project.metadata.description && project.metadata.description.trim());
+
+  const hasBusiness =
+    (project.productContext.summary.trim() &&
+      project.productContext.summary.trim() !== defaultSummary) ||
+    project.productContext.terms.length > 0 ||
+    project.productContext.claims.length > 0 ||
+    project.productContext.goals.length > 0;
+
+  const hasDataSurface =
+    project.data.assets.length > 0 ||
+    project.data.metrics.length > 0 ||
+    project.data.caveats.length > 0 ||
+    project.data.recentUpdates.length > 0;
+
+  const openClarifications = project.clarifications.filter(({ status }) => status === 'open');
+
+  return [
+    {
+      id: 'domain',
+      label: 'Domain identity and boundary',
+      ready:
+        Boolean(project.domain.identity.name.trim()) &&
+        Boolean(project.domain.identity.description.trim()) &&
+        project.domain.identity.description.trim() !== defaultDescription &&
+        (project.domain.boundaries.length > 0 ||
+          project.domain.inclusions.length > 0 ||
+          project.domain.exclusions.length > 0),
+      hint: 'Name the domain, write a real description, and add at least one boundary, inclusion, or exclusion.',
+    },
+    {
+      id: 'context',
+      label: 'Attached context (files, notes, or sources)',
+      ready: hasContext,
+      hint: 'Drop a markdown file, paste notes, or add a source so Claude has material to rewrite.',
+    },
+    {
+      id: 'business',
+      label: 'Business language',
+      ready: hasBusiness,
+      hint: 'Replace the default summary or add terms, claims, or goals.',
+    },
+    {
+      id: 'data',
+      label: 'Data surface, metrics, or caveats',
+      ready: hasDataSurface,
+      hint: 'Add at least one asset, metric, caveat, or recent update.',
+    },
+    {
+      id: 'clarify',
+      label: 'No open clarifications',
+      ready: openClarifications.length === 0,
+      hint:
+        openClarifications.length > 0
+          ? `Resolve ${openClarifications.length} open clarification(s) before building.`
+          : 'No open clarification questions.',
+    },
+  ];
+}
+
+export function claudeBuildBlocked(project: CanonicalProject): boolean {
+  return claudeBuildChecklist(project).some((item) => !item.ready);
+}
+
 export type DeletionTarget =
   | { kind: 'source'; id: string }
   | { kind: 'evidence'; id: string }

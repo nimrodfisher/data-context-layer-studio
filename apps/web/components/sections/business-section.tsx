@@ -3,12 +3,14 @@
 import type { CanonicalProject } from '@context-layer/core';
 import { useState } from 'react';
 
+import { applyDraftToSection } from '../../lib/ingest';
 import {
   claimStatusForEvidence,
   entityId,
   provenanceForEvidence,
   touchProject,
 } from '../../lib/project';
+import { ContextIngest } from '../context-ingest';
 import {
   CollectionHeader,
   EvidenceSelector,
@@ -23,9 +25,10 @@ interface Props {
   project: CanonicalProject;
   onChange: (project: CanonicalProject) => void;
   onEvidenceSelect: (id: string) => void;
+  onNotice?: (message: string, tone?: 'success' | 'error') => void;
 }
 
-export function BusinessSection({ project, onChange, onEvidenceSelect }: Props) {
+export function BusinessSection({ project, onChange, onEvidenceSelect, onNotice }: Props) {
   const [termName, setTermName] = useState('');
   const [termDefinition, setTermDefinition] = useState('');
   const [termEvidenceIds, setTermEvidenceIds] = useState<string[]>([]);
@@ -42,7 +45,7 @@ export function BusinessSection({ project, onChange, onEvidenceSelect }: Props) 
       <SectionIntro
         number="03"
         title="Write the business language"
-        description="Capture definitions and claims in the words decision-makers use. Claims stay visibly unsupported until evidence is linked."
+        description="Drop product docs, paste glossary notes, or ask the agent to draft terms and claims from that context."
         aside={
           <div className="principle-note">
             <span>Writing rule</span>
@@ -52,6 +55,15 @@ export function BusinessSection({ project, onChange, onEvidenceSelect }: Props) 
             </p>
           </div>
         }
+      />
+
+      <ContextIngest
+        project={project}
+        section="business"
+        onChange={onChange}
+        onNotice={onNotice ?? (() => undefined)}
+        applyLabel="Apply draft to summary"
+        onApplyDraft={(draft) => onChange(applyDraftToSection(project, 'business', draft))}
       />
 
       <section className="author-section">

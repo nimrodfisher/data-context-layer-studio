@@ -317,6 +317,7 @@ export function Workbench() {
             project={state.project}
             onChange={updateProject}
             onEvidenceSelect={selectEvidence}
+            onNotice={showNotice}
           />
         );
       case 'data':
@@ -415,7 +416,7 @@ export function Workbench() {
             Download JSON
           </button>
           <button type="button" className="quiet-button" onClick={() => void downloadSkillZip()}>
-            Download skill ZIP
+            Raw skill ZIP
           </button>
         </div>
         <div className="toolbar-actions right">
