@@ -164,13 +164,14 @@ A downloadable ZIP with a domain skill folder shaped for agent runtimes:
 ```text
 your-domain/
 ├── SKILL.md                 # Routing map + non-negotiables
+├── POPULATING.md            # Checklist: how to finish the skill
 ├── guardrails.md            # SQL / tool safety rules
 ├── product_context/         # Overview, segments, lifecycle, glossary
 ├── data_context/
 │   ├── metrics.yml
 │   ├── caveats.md
-│   ├── semantic_layer/
-│   ├── table_profiling/
+│   ├── semantic_layer/      # _index.md + one <table>.yml per table
+│   ├── table_profiling/     # _index.md, <table>.md per table, scripts/profile_table.sql
 │   └── verified_queries/
 └── recent_updates/          # Freshness + ingestion contract
 ```

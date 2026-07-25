@@ -26,6 +26,7 @@ export function exportSkillFiles(project: CanonicalProject): Record<string, stri
   };
 
   put('SKILL.md', renderSkillMd(project, slug));
+  put('POPULATING.md', renderPopulatingMd(project));
   put('guardrails.md', renderGuardrailsMd());
   put('product_context/_index.md', renderProductIndex());
   put('product_context/overview.md', renderOverview(project));
@@ -39,10 +40,8 @@ export function exportSkillFiles(project: CanonicalProject): Record<string, stri
     'data_context/semantic_layer/_index.md',
     renderSemanticIndex(project, assetsById),
   );
-  put(
-    'data_context/table_profiling/_index.md',
-    renderProfilingIndex(project, assetsById),
-  );
+  put('data_context/table_profiling/_index.md', renderProfilingIndex(project));
+  put('data_context/table_profiling/scripts/profile_table.sql', renderProfileScriptSql());
   put('data_context/verified_queries/_index.md', renderVerifiedQueriesIndex());
   put(
     'data_context/verified_queries/verified_queries.yml',
@@ -56,13 +55,12 @@ export function exportSkillFiles(project: CanonicalProject): Record<string, stri
     put(`data_context/semantic_layer/${fileStem}.yml`, renderAssetYml(project, asset, assetsById));
   }
 
-  for (const profile of project.data.profiles) {
-    const asset = assetsById.get(profile.assetId);
-    if (!asset) continue;
+  const profilesByAsset = new Map(project.data.profiles.map((profile) => [profile.assetId, profile]));
+  for (const asset of project.data.assets) {
     const fileStem = assetFileStem(asset);
     put(
       `data_context/table_profiling/${fileStem}.md`,
-      renderProfileMd(asset, profile),
+      renderProfileMd(asset, profilesByAsset.get(asset.id)),
     );
   }
 
@@ -95,6 +93,7 @@ export async function createSkillZipFromFiles(
 /** Relative paths that every skill ZIP must include (under the domain slug). */
 export const REQUIRED_SKILL_RELATIVE_PATHS = [
   'SKILL.md',
+  'POPULATING.md',
   'guardrails.md',
   'product_context/_index.md',
   'product_context/overview.md',
@@ -106,6 +105,7 @@ export const REQUIRED_SKILL_RELATIVE_PATHS = [
   'data_context/caveats.md',
   'data_context/semantic_layer/_index.md',
   'data_context/table_profiling/_index.md',
+  'data_context/table_profiling/scripts/profile_table.sql',
   'data_context/verified_queries/_index.md',
   'data_context/verified_queries/verified_queries.yml',
   'recent_updates/_index.md',
@@ -856,25 +856,23 @@ ${columns}
 ${relationships ? `\n    relationships:\n${relationships}\n` : ''}`;
 }
 
-function renderProfilingIndex(
-  project: CanonicalProject,
-  assetsById: Map<string, DataAsset>,
-): string {
+function renderProfilingIndex(project: CanonicalProject): string {
+  const profilesByAsset = new Map(
+    project.data.profiles.map((profile) => [profile.assetId, profile]),
+  );
   const rows =
-    project.data.profiles.length > 0
-      ? project.data.profiles
-          .map((profile) => {
-            const asset = assetsById.get(profile.assetId);
-            if (!asset) {
-              return `| TODO missing asset \`${profile.assetId}\` | — | — | — |`;
-            }
+    project.data.assets.length > 0
+      ? project.data.assets
+          .map((asset) => {
             const stem = assetFileStem(asset);
-            const generated = profile.freshnessAt?.slice(0, 10) ?? 'TODO: set generated date';
-            const rowsCount = profile.rowCount ?? '—';
+            const profile = profilesByAsset.get(asset.id);
+            const generated = profile?.freshnessAt?.slice(0, 10) ?? '*[not yet profiled]*';
+            const rowsCount = profile?.rowCount ?? '—';
             return `| \`${asset.name}\` | \`${stem}.md\` | ${generated} | ${rowsCount} |`;
           })
           .join('\n')
       : '| TODO | — | *[not yet profiled]* | — |';
+  const unprofiled = project.data.assets.some((asset) => !profilesByAsset.has(asset.id));
 
   return `# Table Profiling
 
@@ -888,8 +886,8 @@ column value.
 ${rows}
 
 ${
-  project.data.profiles.length === 0
-    ? '\nTODO: run warehouse profiling and add one markdown file per profiled asset.\n'
+  unprofiled
+    ? '\nTODO: run `scripts/profile_table.sql` per table, then fill in each `[not yet profiled]` file.\n'
     : ''
 }
 ## Freshness
@@ -899,11 +897,13 @@ ${
 `;
 }
 
-function renderProfileMd(asset: DataAsset, profile: Profile): string {
-  const generated = profile.freshnessAt ?? 'TODO';
+function renderProfileMd(asset: DataAsset, profile?: Profile): string {
+  const generated = profile?.freshnessAt ?? 'TODO';
+  const rowCount = profile?.rowCount ?? 'TODO';
+  const profileColumns = profile?.columns ?? [];
   const columnSections =
-    profile.columns && profile.columns.length > 0
-      ? profile.columns
+    profileColumns.length > 0
+      ? profileColumns
           .map((columnProfile) => {
             const column = asset.columns.find((entry) => entry.id === columnProfile.columnId);
             const name = column?.name ?? columnProfile.columnId;
@@ -943,7 +943,7 @@ TODO: add column profiling.
 generated_at: ${generated}
 generated_by: context-layer exporter
 table: ${asset.fullyQualifiedName ?? asset.name}
-row_count: ${profile.rowCount ?? 'TODO'}
+row_count: ${rowCount}
 \`\`\`
 
 ## Grain
@@ -954,7 +954,7 @@ row_count: ${profile.rowCount ?? 'TODO'}
 
 | | |
 | --- | --- |
-| Rows | ${profile.rowCount ?? 'TODO'} |
+| Rows | ${rowCount} |
 
 ---
 
@@ -1164,5 +1164,136 @@ A digest is not a dump.
 **5. Never write PII, credentials, or raw message dumps.**
 
 **6. Keep entries short.** Two or three lines.
+`;
+}
+
+function renderPopulatingMd(project: CanonicalProject): string {
+  const tables =
+    project.data.assets.length > 0
+      ? project.data.assets.map((asset) => `\`${asset.name}\``).join(', ')
+      : 'TODO: name the tables once they are added';
+  const metrics =
+    project.data.metrics.length > 0
+      ? project.data.metrics.map((metric) => `\`${metric.name}\``).join(', ')
+      : 'TODO: name the metrics once they are added';
+  const draftMetrics = project.data.metrics.filter((metric) => metric.status !== 'agreed').length;
+  const openClarifications = project.clarifications.filter(
+    (entry) => entry.status === 'open',
+  ).length;
+
+  return `# How to finish this skill — an analyst's checklist
+
+This skill is a **starting point**, not a finished product. The structure is in place, but it isn't
+"done" until the tables are profiled and the definitions are signed. This page tells you how to get
+there, in order.
+
+> **The one thing to understand first:** finishing this skill is mostly about **deciding what the
+> numbers mean** — not writing SQL. Your real job is answering the open questions in
+> \`data_context/metrics.yml\` and getting an owner to sign off.
+
+Current status: **${draftMetrics}** metric(s) not yet \`agreed\`, **${openClarifications}** open
+clarification(s).
+
+---
+
+## Do these in order
+
+Each step makes the next one easier. Don't skip ahead.
+
+### Step 1 — Profile the tables (start here — cheapest, highest value)
+
+Run \`data_context/table_profiling/scripts/profile_table.sql\` once per table (set the table name at
+the top). Paste the output into \`data_context/table_profiling/<table>.md\`, then write the "what it
+means" notes by hand.
+Tables: ${tables}.
+
+**Why first:** it turns caveats from *"we think"* into *"we measured"* — the real value ranges, the
+null rates, and any test/internal flags you need to exclude.
+
+**Done when:** each table has a profile file with a date on it (no \`[not yet profiled]\` left).
+
+### Step 2 — Confirm the caveats
+
+Open \`data_context/caveats.md\`. Check each caveat against what Step 1 showed you. If profiling
+surfaced a new gotcha, add it as a new \`C-NN\` entry the same day.
+
+**Done when:** every caveat is backed by something you measured, not something you assumed.
+
+### Step 3 — Regenerate the semantic layer (don't hand-type it)
+
+The files in \`data_context/semantic_layer/\` are **derived**. Regenerate the full version from your
+source of truth (dbt model, \`INFORMATION_SCHEMA\`, or the warehouse). Keep the hand-written
+descriptions and caveat pointers — a raw schema dump doesn't give you those.
+
+**Never hand-type these.** A hand-typed schema is wrong the day someone adds a column.
+
+**Done when:** each file has the full column list.
+
+### Step 4 — Sign the metrics (this is the main job)
+
+Open \`data_context/metrics.yml\`. Every metric marked \`draft\` won't get a confident answer yet.
+Metrics: ${metrics}. For each one:
+
+1. Decide the open questions.
+2. Name a **person** (not a team) as \`owner\` — they arbitrate disputes.
+3. Write the definition: plain-English description + a worked example with real numbers + the SQL.
+4. Change \`status\` from \`draft\` to \`agreed\`.
+
+**Done when:** nothing in the file says \`draft\`.
+
+### Step 5 — Sign the verified queries
+
+Open \`data_context/verified_queries/verified_queries.yml\`. Have the metric owner read each query,
+then put their **name** in \`verified_by\` and today's date in \`verified_at\`.
+
+**Done when:** no query says \`PENDING\`.
+
+### Step 6 — Wire "recent updates"
+
+Point a simple Slack/Jira sync at the domain's channels so the skill can explain *why* a number
+moved. Stamp \`last_synced\` every run — follow \`recent_updates/INGESTION.md\`.
+
+**Done when:** the folder has a recent \`last_synced\` date.
+
+---
+
+## Two rules that keep it healthy
+
+1. **Generate, don't hand-type** anything under \`semantic_layer/\` and \`table_profiling/\`. Editing by
+   hand is how these files quietly drift away from the real warehouse.
+2. **The open questions in \`metrics.yml\` are the work.** A definition with an open question attached
+   is worth more than a confident guess — a guess gets trusted and never checked.
+
+*When every step is done, update the status in \`SKILL.md\` and tell people the skill is ready. Not
+before — a half-finished skill looks authoritative and isn't.*
+`;
+}
+
+function renderProfileScriptSql(): string {
+  return `-- Profile one table before you trust its columns.
+--
+-- Replace <TABLE> with the fully-qualified table name and run once per table.
+-- Paste the output into data_context/table_profiling/<table>.md and write the
+-- "what each value means" notes by hand. Read-only; adapt to your warehouse's SQL dialect.
+
+-- 1. Row count (confirm the grain: is it really one row per what you think?)
+SELECT COUNT(*) AS row_count FROM <TABLE>;
+
+-- 2. Null rate + distinct count for one column (repeat per column, or generate from
+--    INFORMATION_SCHEMA). A high null rate or a surprising distinct count is usually a caveat.
+SELECT
+  COUNT(*)                                       AS rows,
+  COUNT(<COLUMN>)                                AS non_null,
+  1.0 - COUNT(<COLUMN>) / NULLIF(COUNT(*), 0)    AS null_rate,
+  COUNT(DISTINCT <COLUMN>)                       AS distinct_count
+FROM <TABLE>;
+
+-- 3. Top values of a categorical column (what the values actually are — codes vs names,
+--    casing, statuses you didn't expect). This is what stops "= 'success'" from silently missing rows.
+SELECT <COLUMN>, COUNT(*) AS n
+FROM <TABLE>
+GROUP BY 1
+ORDER BY n DESC
+LIMIT 25;
 `;
 }
