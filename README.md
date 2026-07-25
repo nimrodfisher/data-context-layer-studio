@@ -27,6 +27,12 @@ No hosted account. No telemetry. Credentials and MCP configs stay on your machin
 </p>
 
 <p align="center">
+  <img src="docs/images/context-layer-ui-walkthrough.gif" alt="Walkthrough: chat onboarding, domain evidence, metrics, review with zero validation errors, and skill export" width="900" />
+  <br />
+  <sub>From interview to reviewed, provenance-linked skill — one canonical model, exported to the skill file tree.</sub>
+</p>
+
+<p align="center">
   <a href="#quick-start"><strong>Quick start</strong></a> ·
   <a href="#build-it-in-conversation"><strong>Build it in conversation</strong></a> ·
   <a href="#try-the-claude-code-build"><strong>Try Claude Code build</strong></a> ·
