@@ -2,14 +2,23 @@
 
 **Give your AI agents a governed, domain-true context layer — built by the data team, not guessed by the model.**
 
-Data Context Layer Studio helps analytics and data teams turn scattered tribal knowledge (docs, warehouse MCPs, APIs, dbt) into a portable **Cursor / Claude domain skill**.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A5%2022-3c873a.svg" alt="Node 22+" />
+  <img src="https://img.shields.io/badge/local--first-no%20telemetry-6f42c1.svg" alt="Local-first, no telemetry" />
+  <a href="#contributing"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome" /></a>
+</p>
 
-Two ways to build that skill (same output shape):
+Data Context Layer Studio helps analytics and data teams turn scattered tribal knowledge (docs, warehouse MCPs, APIs, dbt) into a portable **Claude / Cursor domain skill** — a `SKILL.md` routing map plus leaf files an agent loads _before_ it answers a data question.
 
-| Mode | Status | Best for |
+**Two ways to build it, same output** — pick whichever fits your team:
+
+| Path | Best for | Start here |
 | --- | --- | --- |
-| **Workbench UI** | Available now | Analysts who want a guided checklist so no context piece is skipped, then Claude Code writes the skill |
-| **Conversational onboarding skill** | Coming soon | Teams who prefer Claude interviewing them in chat and creating the skill during the conversation |
+| 💬 **Conversational skill** | Teams who'd rather be interviewed in chat by Claude or Cursor | [Build it in conversation](#build-it-in-conversation) |
+| 🖥️ **Workbench UI** | Analysts who want a guided visual checklist so nothing is skipped | [Quick start](#quick-start) |
+
+Curious what the result looks like? See a finished (fictional) example: [`examples/subscription-usage/`](examples/subscription-usage/).
 
 No hosted account. No telemetry. Credentials and MCP configs stay on your machine.
 
@@ -19,6 +28,7 @@ No hosted account. No telemetry. Credentials and MCP configs stay on your machin
 
 <p align="center">
   <a href="#quick-start"><strong>Quick start</strong></a> ·
+  <a href="#build-it-in-conversation"><strong>Build it in conversation</strong></a> ·
   <a href="#try-the-claude-code-build"><strong>Try Claude Code build</strong></a> ·
   <a href="#what-you-get"><strong>What you get</strong></a> ·
   <a href="#how-it-works"><strong>How it works</strong></a> ·
@@ -65,6 +75,47 @@ Open [http://localhost:3000](http://localhost:3000).
 2. Refine Domain → Sources → Business → Data → Metrics → Caveats → Governance (drop files, paste notes, or ask the agent per section)  
 3. Run **Clarify** / **Review** until the Claude Code checklist is green  
 4. Click **Build skill with Claude Code** — or **Download raw ZIP** if you only want the deterministic template fill  
+
+---
+
+## Build it in conversation
+
+Prefer to be **interviewed** instead of filling in a UI? Open this repo in **Claude Code** or
+**Cursor** and let the agent walk you through it. Same output as the UI — a polished skill folder.
+
+1. Clone and install (the [Quick start](#quick-start) steps above), then open the folder in Claude
+   Code or Cursor.
+2. Invoke the onboarding skill — in Claude Code, run `/context-onboarding` (or just ask:
+   *"help me build a context skill for my domain"*).
+3. Answer a handful of short questions. The agent reads the docs and tables you point it at,
+   captures evidence, and writes a `project.json`.
+4. It runs one command to generate the skill, then polishes it:
+
+   ```sh
+   pnpm export:skill ./<your-domain>.project.json --out ./<your-domain>-skill
+   ```
+
+5. Drop the resulting `<your-domain>/` folder into your agent's skills directory.
+
+The skill lives in [`.claude/skills/context-onboarding/`](.claude/skills/context-onboarding/) and
+is written for non-technical analysts — short questions, plain language, nothing invented.
+
+**Using Cursor?** Point Cursor at the same folder, or copy
+`.claude/skills/context-onboarding/` into your Cursor skills/rules location. The steps are identical.
+
+See a finished example (fictional) under [`examples/subscription-usage/`](examples/subscription-usage/)
+— that's the quality bar the polish step aims at.
+
+### Just the exporter
+
+`pnpm export:skill` turns any canonical `project.json` into the skill file tree without the web
+server — handy in scripts or CI:
+
+```sh
+pnpm export:skill project.json --out ./skill      # write the folder tree
+pnpm export:skill project.json --zip              # write a <domain>-skill.zip
+pnpm export:skill project.json --validate-only    # check it, write nothing
+```
 
 ---
 
@@ -118,7 +169,9 @@ your-domain/
 └── recent_updates/          # Freshness + ingestion contract
 ```
 
-Drop it into your agent skills directory (for example Cursor project skills) and agents get a map, not an encyclopedia.
+Drop it into your agent skills directory (for example `.claude/skills/` or your Cursor skills location) and agents get a map, not an encyclopedia.
+
+The conversational / polish path also writes two extra files: **`POPULATING.md`** (a plain checklist of what's left to finish the skill) and **`GOVERNANCE.md`** (suggested routines — freshness checks, update syncs, metric sign-off). See both in [`examples/subscription-usage/`](examples/subscription-usage/).
 
 ---
 
@@ -128,13 +181,14 @@ Drop it into your agent skills directory (for example Cursor project skills) and
 Sources you already have
    │  markdown · paste · Cursor MCP · API · dbt (optional)
    ▼
-Chat + guided authoring (checklist so nothing is skipped)
-   │
+Author the context — pick one, same result:
+   • Web workbench          (guided visual checklist)
+   • Conversational skill    (Claude/Cursor interviews you)
    ▼
-Canonical project (local validate · clarify · save/load)
+Canonical project.json (local validate · clarify · save/load)
    │
-   ├─► Claude Code build pack → claude -p → polished skill ZIP
-   └─► Raw deterministic ZIP (no Claude required)
+   ├─► pnpm export:skill           → deterministic skill tree / ZIP (no LLM)
+   └─► Claude Code build / polish  → claude -p → polished skill
 ```
 
 ### Chat + MCP connectors
@@ -182,7 +236,10 @@ pnpm TypeScript monorepo:
 | `packages/core` | Canonical model, validation, persistence |
 | `packages/sources` | Static / MCP / REST / dbt adapters |
 | `packages/agent` | Grounded drafting and clarification |
-| `packages/exporters` | Skill file generation + ZIP |
+| `packages/exporters` | Skill file generation + ZIP + the `export:skill` CLI |
+| `.claude/skills/context-onboarding` | The conversational onboarding skill |
+
+`pnpm export:skill <project.json> [--out <dir> \| --zip \| --validate-only]` renders a canonical project into the skill tree from the terminal — no web server required.
 
 ```sh
 corepack pnpm test        # unit tests
@@ -219,7 +276,7 @@ Want a new connector? Start from `packages/sources` and register it with the ada
 - [x] Per-section file / paste / agent ingest  
 - [x] Skill ZIP export matching the domain template  
 - [x] Claude Code handoff (checklist → build pack → `claude -p` → polished ZIP)  
-- [ ] **Conversational onboarding skill** — Claude interviews the analyst and creates the skill in chat (same output shape as the UI)  
+- [x] **Conversational onboarding skill** — Claude/Cursor interviews the analyst and builds the skill in chat (same output shape as the UI)  
 - [ ] Connected skill testing (ask business questions, inspect traces)  
 - [ ] Richer live MCP auth flows (OAuth-backed servers)  
 - [ ] Contributor docs, examples pack, and release automation  

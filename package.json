@@ -14,8 +14,14 @@
     "pretest": "corepack pnpm --filter @context-layer/core build && corepack pnpm --filter @context-layer/sources build && corepack pnpm --filter @context-layer/agent build && corepack pnpm --filter @context-layer/exporters build",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "preexport:skill": "corepack pnpm --filter @context-layer/core build && corepack pnpm --filter @context-layer/exporters build",
+    "export:skill": "node scripts/export-skill.mjs",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
+  },
+  "dependencies": {
+    "@context-layer/core": "workspace:*",
+    "@context-layer/exporters": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

@@ -35,6 +35,7 @@ export default tseslint.config(
   {
     files: [
       '*.{js,mjs,cjs,ts}',
+      'scripts/**/*.{js,mjs,cjs,ts}',
       '**/*.{config,server}.{js,mjs,cjs,ts,tsx}',
       '**/{middleware,route}.{js,ts}',
       '**/*.{test,spec}.{js,jsx,ts,tsx}',
