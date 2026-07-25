@@ -1,0 +1,395 @@
+{
+  "metadata": {
+    "id": "subscription-usage",
+    "name": "Subscription Usage",
+    "version": 1,
+    "description": "Fictional example — trial conversion, active subscribers, engagement, and churn for a consumer fitness subscription (LumenFit).",
+    "createdAt": "2026-07-16T09:00:00.000Z",
+    "updatedAt": "2026-07-18T09:00:00.000Z"
+  },
+  "domain": {
+    "identity": {
+      "name": "Subscription Usage",
+      "description": "Owns subscription status, trial conversion, in-app engagement, and churn for LumenFit (fictional consumer fitness app). Does not own revenue/MRR, acquisition, or content performance.",
+      "provenance": { "evidenceIds": ["ev-brief"] }
+    },
+    "boundaries": [
+      { "text": "Covers subscription status, trial conversion, engagement minutes, and churn", "provenance": { "evidenceIds": ["ev-brief"] } }
+    ],
+    "audiences": [
+      { "id": "aud-lifecycle", "name": "Lifecycle marketers", "description": "Plan and measure campaigns and retention", "provenance": { "evidenceIds": ["ev-brief"] } }
+    ],
+    "owners": [
+      { "id": "owner-dana", "name": "Dana Ruiz", "email": "dana@lumenfit.example", "team": "Lifecycle" },
+      { "id": "owner-priya", "name": "Priya Shah", "email": "priya@lumenfit.example", "team": "Product Analytics" }
+    ],
+    "inclusions": [
+      { "text": "Trial conversion, active subscriber counts, engagement minutes, churn", "provenance": { "evidenceIds": ["ev-brief"] } }
+    ],
+    "exclusions": [
+      { "text": "Revenue/MRR (Finance), acquisition/ad spend (Growth), content performance (Content)", "provenance": { "evidenceIds": ["ev-brief"] } }
+    ]
+  },
+  "sources": [
+    {
+      "id": "source-analyst-input",
+      "name": "Analyst input",
+      "transport": "static",
+      "adapter": "static",
+      "authority": "reference",
+      "scope": ["manual authoring"],
+      "freshness": { "maxAgeHours": 168 },
+      "connection": { "kind": "analyst-input" }
+    },
+    {
+      "id": "source-brief",
+      "name": "LumenFit domain brief (Confluence)",
+      "transport": "static",
+      "authority": "authoritative",
+      "scope": ["domain", "metrics"],
+      "freshness": { "maxAgeHours": 720 },
+      "connection": { "kind": "static", "endpoint": "https://wiki.lumenfit.example/subscription-usage" }
+    },
+    {
+      "id": "source-warehouse",
+      "name": "LumenFit warehouse (MCP)",
+      "transport": "mcp",
+      "authority": "authoritative",
+      "scope": ["data", "FACT_MEMBER_SESSION", "FACT_SUBSCRIPTION_CYCLE", "DIM_MEMBER"],
+      "freshness": { "maxAgeHours": 24 },
+      "connection": { "kind": "mcp", "endpoint": "https://warehouse.lumenfit.example/mcp", "credentialRef": "LUMENFIT_WAREHOUSE_TOKEN" }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-brief",
+      "sourceId": "source-brief",
+      "kind": "document",
+      "locator": "https://wiki.lumenfit.example/subscription-usage#overview",
+      "retrievedAt": "2026-07-16T09:05:00.000Z",
+      "confidence": 0.9,
+      "excerpt": "Subscription Usage covers who is subscribed, whether trials convert, how much members use the app, and who is at risk of leaving. Revenue, acquisition, and content are out of scope."
+    },
+    {
+      "id": "ev-conversion-def",
+      "sourceId": "source-brief",
+      "kind": "document",
+      "locator": "https://wiki.lumenfit.example/subscription-usage#conversion",
+      "retrievedAt": "2026-07-16T09:10:00.000Z",
+      "confidence": 0.85,
+      "excerpt": "Trial conversion = paid conversions / trials started, cohorted by the month the trial STARTED. Internal accounts excluded (IS_INTERNAL = FALSE)."
+    },
+    {
+      "id": "ev-cycle-catalog",
+      "sourceId": "source-warehouse",
+      "kind": "catalog",
+      "locator": "ANALYTICS.SUBS.FACT_SUBSCRIPTION_CYCLE",
+      "retrievedAt": "2026-07-17T09:00:00.000Z",
+      "confidence": 0.95,
+      "excerpt": "One row per member per billing cycle. SUBSCRIPTION_STATE in (trialing, active, paused, cancelled). CANCELLATION_REASON populated when cancelled."
+    },
+    {
+      "id": "ev-session-catalog",
+      "sourceId": "source-warehouse",
+      "kind": "catalog",
+      "locator": "ANALYTICS.SUBS.FACT_MEMBER_SESSION",
+      "retrievedAt": "2026-07-17T09:05:00.000Z",
+      "confidence": 0.95,
+      "excerpt": "One row per app session. SESSION_DURATION_SECONDS; ~8% under 60s are accidental opens."
+    },
+    {
+      "id": "ev-member-catalog",
+      "sourceId": "source-warehouse",
+      "kind": "catalog",
+      "locator": "ANALYTICS.SUBS.DIM_MEMBER",
+      "retrievedAt": "2026-07-17T09:10:00.000Z",
+      "confidence": 0.95,
+      "excerpt": "One row per member. PLAN_TIER is an integer (1=monthly, 2=annual, 3=family). IS_INTERNAL flags staff/QA."
+    }
+  ],
+  "productContext": {
+    "summary": "Subscription Usage measures how well LumenFit converts trials, keeps members engaged, and retains subscribers. Lifecycle marketers use it to compare plans and spot churn risk.",
+    "goals": [
+      { "text": "Convert more trials without discounting away margin", "provenance": { "evidenceIds": ["ev-brief"] } }
+    ],
+    "personas": [
+      { "text": "Lifecycle marketer comparing plan performance week over week", "provenance": { "evidenceIds": ["ev-brief"] } }
+    ],
+    "provenance": { "evidenceIds": ["ev-brief"] },
+    "terms": [
+      { "id": "term-trialing", "name": "Trialing", "definition": "A member in a free trial who has not yet paid; excluded from subscriber counts.", "provenance": { "evidenceIds": ["ev-cycle-catalog"] } },
+      { "id": "term-active", "name": "Active", "definition": "Ambiguous — can mean paying (active_subscribers) or engaged (active_minutes). Always clarify.", "provenance": { "evidenceIds": ["ev-brief"] } }
+    ],
+    "claims": [
+      { "id": "claim-cohort", "text": "Trial conversion is cohorted by trial-start month, not conversion month.", "evidenceIds": ["ev-conversion-def"], "provenance": { "status": "supported" } }
+    ]
+  },
+  "data": {
+    "assets": [
+      {
+        "id": "asset-fact-session",
+        "name": "FACT_MEMBER_SESSION",
+        "kind": "table",
+        "sourceId": "source-warehouse",
+        "fullyQualifiedName": "ANALYTICS.SUBS.FACT_MEMBER_SESSION",
+        "description": "One row per app session with duration.",
+        "grain": "One row per session",
+        "ownerIds": ["owner-priya"],
+        "evidenceIds": ["ev-session-catalog"],
+        "provenance": { "evidenceIds": ["ev-session-catalog"] },
+        "columns": [
+          { "id": "col-session-member", "name": "MEMBER_ID", "dataType": "string", "description": "Member the session belongs to.", "nullable": false, "evidenceIds": ["ev-session-catalog"], "provenance": { "evidenceIds": ["ev-session-catalog"] } },
+          { "id": "col-session-duration", "name": "SESSION_DURATION_SECONDS", "dataType": "number", "description": "Session length in seconds; <60 are accidental opens.", "nullable": false, "evidenceIds": ["ev-session-catalog"], "provenance": { "evidenceIds": ["ev-session-catalog"] } },
+          { "id": "col-session-started", "name": "STARTED_AT", "dataType": "timestamp", "description": "When the session started (UTC).", "nullable": false, "evidenceIds": ["ev-session-catalog"], "provenance": { "evidenceIds": ["ev-session-catalog"] } }
+        ]
+      },
+      {
+        "id": "asset-fact-cycle",
+        "name": "FACT_SUBSCRIPTION_CYCLE",
+        "kind": "table",
+        "sourceId": "source-warehouse",
+        "fullyQualifiedName": "ANALYTICS.SUBS.FACT_SUBSCRIPTION_CYCLE",
+        "description": "One row per member per billing cycle, with subscription state.",
+        "grain": "One row per member per billing cycle",
+        "ownerIds": ["owner-dana"],
+        "evidenceIds": ["ev-cycle-catalog"],
+        "provenance": { "evidenceIds": ["ev-cycle-catalog"] },
+        "columns": [
+          { "id": "col-cycle-member", "name": "MEMBER_ID", "dataType": "string", "description": "Member the cycle belongs to.", "nullable": false, "evidenceIds": ["ev-cycle-catalog"], "provenance": { "evidenceIds": ["ev-cycle-catalog"] } },
+          { "id": "col-cycle-state", "name": "SUBSCRIPTION_STATE", "dataType": "string", "description": "trialing | active | paused | cancelled.", "nullable": false, "evidenceIds": ["ev-cycle-catalog"], "provenance": { "evidenceIds": ["ev-cycle-catalog"] } },
+          { "id": "col-cycle-cancel-reason", "name": "CANCELLATION_REASON", "dataType": "string", "description": "voluntary | payment_failure; NULL unless cancelled.", "nullable": true, "evidenceIds": ["ev-cycle-catalog"], "provenance": { "evidenceIds": ["ev-cycle-catalog"] } }
+        ]
+      },
+      {
+        "id": "asset-dim-member",
+        "name": "DIM_MEMBER",
+        "kind": "table",
+        "sourceId": "source-warehouse",
+        "fullyQualifiedName": "ANALYTICS.SUBS.DIM_MEMBER",
+        "description": "One row per member with plan and internal flag.",
+        "grain": "One row per member",
+        "ownerIds": ["owner-dana"],
+        "evidenceIds": ["ev-member-catalog"],
+        "provenance": { "evidenceIds": ["ev-member-catalog"] },
+        "columns": [
+          { "id": "col-member-id", "name": "MEMBER_ID", "dataType": "string", "description": "Member primary key.", "nullable": false, "evidenceIds": ["ev-member-catalog"], "provenance": { "evidenceIds": ["ev-member-catalog"] } },
+          { "id": "col-member-plan", "name": "PLAN_TIER", "dataType": "number", "description": "1=monthly, 2=annual, 3=family (integer code, not a name).", "nullable": false, "evidenceIds": ["ev-member-catalog"], "provenance": { "evidenceIds": ["ev-member-catalog"] } },
+          { "id": "col-member-internal", "name": "IS_INTERNAL", "dataType": "boolean", "description": "TRUE for staff/QA accounts; exclude from all metrics.", "nullable": false, "evidenceIds": ["ev-member-catalog"], "provenance": { "evidenceIds": ["ev-member-catalog"] } }
+        ]
+      }
+    ],
+    "joins": [
+      {
+        "id": "join-session-member",
+        "name": "session → member",
+        "left": { "assetId": "asset-fact-session", "columnId": "col-session-member" },
+        "right": { "assetId": "asset-dim-member", "columnId": "col-member-id" },
+        "condition": "FACT_MEMBER_SESSION.MEMBER_ID = DIM_MEMBER.MEMBER_ID",
+        "relationship": "many-to-one",
+        "provenance": { "evidenceIds": ["ev-session-catalog"] }
+      },
+      {
+        "id": "join-cycle-member",
+        "name": "cycle → member",
+        "left": { "assetId": "asset-fact-cycle", "columnId": "col-cycle-member" },
+        "right": { "assetId": "asset-dim-member", "columnId": "col-member-id" },
+        "condition": "FACT_SUBSCRIPTION_CYCLE.MEMBER_ID = DIM_MEMBER.MEMBER_ID",
+        "relationship": "many-to-one",
+        "provenance": { "evidenceIds": ["ev-cycle-catalog"] }
+      }
+    ],
+    "profiles": [],
+    "metrics": [
+      {
+        "id": "metric-trial-conversion",
+        "name": "trial_conversion_rate",
+        "synonyms": ["trial-to-paid", "T2P", "conversion rate"],
+        "status": "draft",
+        "description": "Share of trials that become paying subscribers, by trial-start cohort.",
+        "workedExample": "June cohort: 1,820 paid / 8,400 trials started = 21.7%.",
+        "definition": { "kind": "expression", "expression": "paid_conversions / trials_started, by trial-start cohort" },
+        "accessModifier": "internal",
+        "assetIds": ["asset-fact-cycle"],
+        "grain": "Per cohort month",
+        "ownerIds": ["owner-dana"],
+        "evidenceIds": ["ev-conversion-def"],
+        "caveatIds": ["caveat-internal", "caveat-trialing"],
+        "provenance": { "evidenceIds": ["ev-conversion-def"] }
+      },
+      {
+        "id": "metric-active-subscribers",
+        "name": "active_subscribers",
+        "synonyms": ["paying members", "active subs"],
+        "status": "draft",
+        "description": "Count of members with SUBSCRIPTION_STATE = 'active' at a point in time.",
+        "workedExample": "2026-07-15 snapshot: 46,900 active subscribers.",
+        "definition": { "kind": "sql", "sql": "COUNT(DISTINCT MEMBER_ID) WHERE SUBSCRIPTION_STATE = 'active' AND IS_INTERNAL = FALSE" },
+        "accessModifier": "internal",
+        "assetIds": ["asset-fact-cycle"],
+        "grain": "Per member, point-in-time snapshot",
+        "ownerIds": ["owner-dana"],
+        "evidenceIds": ["ev-cycle-catalog"],
+        "caveatIds": ["caveat-active-ambiguity", "caveat-trialing"],
+        "provenance": { "evidenceIds": ["ev-cycle-catalog"] }
+      },
+      {
+        "id": "metric-active-minutes",
+        "name": "active_minutes",
+        "synonyms": ["engagement minutes", "workout minutes"],
+        "status": "draft",
+        "description": "Total in-app active minutes per member over a period (engaged, not subscribed).",
+        "workedExample": "July, active members: median 92 active minutes.",
+        "definition": { "kind": "sql", "sql": "SUM(SESSION_DURATION_SECONDS)/60 WHERE SESSION_DURATION_SECONDS >= 60" },
+        "accessModifier": "internal",
+        "assetIds": ["asset-fact-session"],
+        "grain": "Per member, per period",
+        "ownerIds": ["owner-priya"],
+        "evidenceIds": ["ev-session-catalog"],
+        "caveatIds": ["caveat-active-ambiguity", "caveat-subminute"],
+        "provenance": { "evidenceIds": ["ev-session-catalog"] }
+      },
+      {
+        "id": "metric-churn",
+        "name": "monthly_churn_rate",
+        "synonyms": ["churn", "cancellation rate"],
+        "status": "draft",
+        "description": "Share of active subscribers at month start who are cancelled by month end.",
+        "workedExample": "June: 1,410 cancels / 46,000 actives at month start = 3.1%.",
+        "definition": { "kind": "expression", "expression": "cancellations_in_month / active_subscribers_at_month_start" },
+        "accessModifier": "internal",
+        "assetIds": ["asset-fact-cycle"],
+        "grain": "Per month",
+        "ownerIds": ["owner-dana"],
+        "evidenceIds": ["ev-cycle-catalog"],
+        "caveatIds": ["caveat-internal", "caveat-pause"],
+        "provenance": { "evidenceIds": ["ev-cycle-catalog"] }
+      }
+    ],
+    "verifiedQueries": [
+      {
+        "id": "query-t1",
+        "name": "trial_to_paid_by_plan",
+        "sql": "SELECT PLAN_TIER, COUNT_IF(converted) / COUNT(*) AS conversion FROM trial_cohort WHERE IS_INTERNAL = FALSE GROUP BY 1",
+        "metricIds": ["metric-trial-conversion"],
+        "assetIds": ["asset-fact-cycle", "asset-dim-member"],
+        "evidenceIds": ["ev-conversion-def"],
+        "signed": { "state": "signed", "history": [{ "action": "signed", "ownerId": "owner-dana", "at": "2026-07-18T09:00:00.000Z" }] },
+        "provenance": { "evidenceIds": ["ev-conversion-def"] }
+      },
+      {
+        "id": "query-a1",
+        "name": "active_subscribers_snapshot",
+        "sql": "SELECT COUNT(DISTINCT MEMBER_ID) FROM FACT_SUBSCRIPTION_CYCLE WHERE SUBSCRIPTION_STATE = 'active' AND IS_INTERNAL = FALSE",
+        "metricIds": ["metric-active-subscribers"],
+        "assetIds": ["asset-fact-cycle"],
+        "evidenceIds": ["ev-cycle-catalog"],
+        "signed": { "state": "signed", "history": [{ "action": "signed", "ownerId": "owner-dana", "at": "2026-07-18T09:00:00.000Z" }] },
+        "provenance": { "evidenceIds": ["ev-cycle-catalog"] }
+      },
+      {
+        "id": "query-c1",
+        "name": "monthly_churn_by_cohort",
+        "sql": "SELECT month, cancels / actives_at_start AS churn FROM churn_cohort WHERE IS_INTERNAL = FALSE",
+        "metricIds": ["metric-churn"],
+        "assetIds": ["asset-fact-cycle"],
+        "evidenceIds": ["ev-cycle-catalog"],
+        "signed": { "state": "signed", "history": [{ "action": "signed", "ownerId": "owner-dana", "at": "2026-07-18T09:00:00.000Z" }] },
+        "provenance": { "evidenceIds": ["ev-cycle-catalog"] }
+      }
+    ],
+    "caveats": [
+      {
+        "id": "caveat-internal",
+        "name": "Internal/staff accounts skew everything",
+        "severity": "CORRECTION",
+        "where": [{ "kind": "column", "assetId": "asset-dim-member", "columnId": "col-member-internal" }],
+        "what": "~1,900 staff and QA accounts have unlimited plans and abnormal usage.",
+        "action": "Always filter IS_INTERNAL = FALSE; say you did.",
+        "foundAt": "2026-07-17",
+        "foundSourceId": "source-warehouse",
+        "evidenceIds": ["ev-member-catalog"],
+        "provenance": { "evidenceIds": ["ev-member-catalog"] }
+      },
+      {
+        "id": "caveat-trialing",
+        "name": "Trials are not subscribers",
+        "severity": "CORRECTION",
+        "where": [{ "kind": "column", "assetId": "asset-fact-cycle", "columnId": "col-cycle-state" }],
+        "what": "'trialing' rows look like subscriptions but no payment has occurred.",
+        "action": "Exclude 'trialing' from subscriber counts unless the question is about trials.",
+        "foundAt": "2026-07-17",
+        "foundSourceId": "source-warehouse",
+        "evidenceIds": ["ev-cycle-catalog"],
+        "provenance": { "evidenceIds": ["ev-cycle-catalog"] }
+      },
+      {
+        "id": "caveat-pause",
+        "name": "A pause is not a churn",
+        "severity": "CORRECTION",
+        "where": [{ "kind": "column", "assetId": "asset-fact-cycle", "columnId": "col-cycle-state" }],
+        "what": "Paused members stop paying but haven't cancelled; counting pauses as churn overstates it.",
+        "action": "Churn counts only 'cancelled'. Report pauses separately if asked.",
+        "foundAt": "2026-07-17",
+        "foundSourceId": "source-warehouse",
+        "evidenceIds": ["ev-cycle-catalog"],
+        "provenance": { "evidenceIds": ["ev-cycle-catalog"] }
+      },
+      {
+        "id": "caveat-active-ambiguity",
+        "name": "'Active' means two different things",
+        "severity": "BLOCKER",
+        "where": [{ "kind": "metric", "metricId": "metric-active-subscribers" }, { "kind": "metric", "metricId": "metric-active-minutes" }],
+        "what": "'active' can mean paying (subscriber) or engaged (using the app). They diverge a lot.",
+        "action": "Stop and ask which one before answering any 'how many active...' question.",
+        "foundAt": "2026-07-17",
+        "foundSourceId": "source-brief",
+        "evidenceIds": ["ev-brief"],
+        "provenance": { "evidenceIds": ["ev-brief"] }
+      },
+      {
+        "id": "caveat-subminute",
+        "name": "Sub-minute sessions are accidental opens",
+        "severity": "CORRECTION",
+        "where": [{ "kind": "column", "assetId": "asset-fact-session", "columnId": "col-session-duration" }],
+        "what": "~8% of sessions are under 60s — app opened and closed, not real usage.",
+        "action": "Exclude SESSION_DURATION_SECONDS < 60 from engagement metrics.",
+        "foundAt": "2026-07-17",
+        "foundSourceId": "source-warehouse",
+        "evidenceIds": ["ev-session-catalog"],
+        "provenance": { "evidenceIds": ["ev-session-catalog"] }
+      },
+      {
+        "id": "caveat-plan-tier",
+        "name": "Plan tier is a code, not a name",
+        "severity": "NOTE",
+        "where": [{ "kind": "column", "assetId": "asset-dim-member", "columnId": "col-member-plan" }],
+        "what": "PLAN_TIER is an integer (1=monthly, 2=annual, 3=family), not a label.",
+        "action": "Map the code; never filter on a plan name string — there isn't one.",
+        "foundAt": "2026-07-17",
+        "foundSourceId": "source-warehouse",
+        "evidenceIds": ["ev-member-catalog"],
+        "provenance": { "evidenceIds": ["ev-member-catalog"] }
+      }
+    ],
+    "recentUpdates": []
+  },
+  "governance": {
+    "classifications": [
+      { "id": "class-member-internal", "name": "Member data — internal", "level": "internal", "assetIds": ["asset-dim-member", "asset-fact-cycle", "asset-fact-session"], "provenance": { "evidenceIds": ["ev-brief"] } }
+    ],
+    "policies": [
+      { "id": "policy-aggregate-only", "name": "Aggregate member data only", "description": "Report at cohort/segment level; never expose individual member identities in analysis outputs.", "ownerIds": ["owner-dana"], "assetIds": ["asset-dim-member"], "provenance": { "evidenceIds": ["ev-brief"] } }
+    ]
+  },
+  "clarifications": [
+    {
+      "id": "clarification-reactivations",
+      "question": "Do reactivated members (churned, then re-trialed) count as new trials, or are they excluded?",
+      "status": "open",
+      "createdAt": "2026-07-16T09:20:00.000Z",
+      "evidenceIds": [],
+      "provenance": { "evidenceIds": [], "sourceId": "source-analyst-input", "method": "human" }
+    }
+  ],
+  "tests": { "cases": [], "results": [], "traces": [] }
+}

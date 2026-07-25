@@ -97,7 +97,8 @@ guidance (what "done" means, what to polish, and the governance recommendations 
 
 - Make `SKILL.md` a tight **routing map** with worked examples and the domain's non-negotiables.
 - Fill `metrics.yml` with real definitions, worked examples, and any open decisions.
-- Write a `POPULATING.md` (a plain checklist of what's left to finish).
+- Fill each `table_profiling/<table>.md` stub (run the generated `scripts/profile_table.sql`).
+- Polish the generated `POPULATING.md` (the finish-it checklist) to this domain.
 - Write a `GOVERNANCE.md` (suggested routines — freshness checks, update syncs, sign-off).
 - Keep every honest `TODO:`. Never fabricate.
 

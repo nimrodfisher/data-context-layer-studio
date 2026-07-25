@@ -12,6 +12,7 @@ import { createCanonicalProject } from './test-fixtures.js';
 
 const REQUIRED_SUFFIXES = [
   'SKILL.md',
+  'POPULATING.md',
   'guardrails.md',
   'product_context/_index.md',
   'product_context/overview.md',
@@ -23,6 +24,7 @@ const REQUIRED_SUFFIXES = [
   'data_context/caveats.md',
   'data_context/semantic_layer/_index.md',
   'data_context/table_profiling/_index.md',
+  'data_context/table_profiling/scripts/profile_table.sql',
   'data_context/verified_queries/_index.md',
   'data_context/verified_queries/verified_queries.yml',
   'recent_updates/_index.md',
@@ -69,6 +71,28 @@ describe('exportSkillFiles', () => {
     expect(files).toHaveProperty(`${slug}/data_context/semantic_layer/fct_orders.yml`);
     expect(files).toHaveProperty(`${slug}/data_context/table_profiling/fct_orders.md`);
     expect(files).toHaveProperty(`${slug}/recent_updates/updates/2026-07.md`);
+  });
+
+  it('emits a profiling file per asset and the profiling script even when unprofiled', () => {
+    const project = createCanonicalProject();
+    project.data.profiles = [];
+    const slug = domainSlug(project);
+    const files = exportSkillFiles(project);
+    const paths = Object.keys(files);
+
+    const profilingMd = paths.filter(
+      (path) =>
+        path.startsWith(`${slug}/data_context/table_profiling/`) &&
+        path.endsWith('.md') &&
+        !path.endsWith('_index.md'),
+    );
+    expect(profilingMd.length).toBe(project.data.assets.length);
+    expect(project.data.assets.length).toBeGreaterThan(0);
+    expect(files[`${slug}/data_context/table_profiling/scripts/profile_table.sql`]).toContain(
+      '<TABLE>',
+    );
+    expect(files[`${slug}/data_context/table_profiling/_index.md`]).toContain('[not yet profiled]');
+    expect(files[`${slug}/POPULATING.md`]).toMatch(/Sign the metrics/);
   });
 
   it('leaves honest TODO scaffolds when sections are empty', () => {

@@ -16,8 +16,8 @@ description: Complete context for the Subscription Usage domain at LumenFit (fic
 | `data_context/verified_queries/` | 🟢 3 queries (T1, A1, C1), signed 2026-07-18 by dana@lumenfit.example |
 | `data_context/metrics.yml` | 🟡 4 metrics, all decisions captured — pending flip `draft` → `agreed` |
 | `data_context/caveats.md` | 🟢 6 caveats (C-01–C-06), measured 2026-07-17 |
-| `data_context/semantic_layer/` | 🟡 2 of 3 tables mapped — `dim_member` full, facts partial |
-| `data_context/table_profiling/` | 🔴 not yet profiled |
+| `data_context/semantic_layer/` | 🟢 3 tables mapped — `_index.md` + one `.yml` per table |
+| `data_context/table_profiling/` | 🟡 index + per-table stubs — run `scripts/profile_table.sql` to fill |
 
 ## What this domain owns
 

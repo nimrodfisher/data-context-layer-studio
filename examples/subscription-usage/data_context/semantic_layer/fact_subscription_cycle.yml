@@ -1,0 +1,35 @@
+# Generated from canonical project context. Prefer regenerating over hand-editing.
+
+version: 2
+
+models:
+  - name: fact_subscription_cycle
+    meta:
+      context_file: data_context/semantic_layer/fact_subscription_cycle.yml
+    database: ANALYTICS
+    schema: SUBS
+    description: |
+      One row per member per billing cycle, with subscription state. Grain: One row per member per billing cycle.
+    columns:
+      - name: MEMBER_ID
+        description: "Member the cycle belongs to."
+        data_type: string
+        constraints:
+          - type: not_null
+
+      - name: SUBSCRIPTION_STATE
+        description: "trialing | active | paused | cancelled."
+        data_type: string
+        constraints:
+          - type: not_null
+
+      - name: CANCELLATION_REASON
+        description: "voluntary | payment_failure; NULL unless cancelled."
+        data_type: string
+
+    relationships:
+      - from_model: fact_subscription_cycle
+        from_column: MEMBER_ID
+        to_model: dim_member
+        to_column: MEMBER_ID
+        description: "cycle → member (many-to-one): FACT_SUBSCRIPTION_CYCLE.MEMBER_ID = DIM_MEMBER.MEMBER_ID"

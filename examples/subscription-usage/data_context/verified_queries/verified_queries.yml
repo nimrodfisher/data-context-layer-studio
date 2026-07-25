@@ -1,0 +1,38 @@
+# Verified queries for Subscription Usage
+#
+# Prefer exact matches. Adapt date/filter only. Do not rewrite joins or grain.
+
+verified_queries:
+
+  - name: trial-to-paid-by-plan
+    question: trial_to_paid_by_plan
+    sql: |
+      SELECT PLAN_TIER, COUNT_IF(converted) / COUNT(*) AS conversion FROM trial_cohort WHERE IS_INTERNAL = FALSE GROUP BY 1
+    verified_by: "Dana Ruiz"
+    verified_at: 2026-07-18
+    uses_metrics: [trial_conversion_rate]
+    handles_caveats: [C-01, C-02]
+    notes: |
+      Signed verified query from canonical project.
+
+  - name: active-subscribers-snapshot
+    question: active_subscribers_snapshot
+    sql: |
+      SELECT COUNT(DISTINCT MEMBER_ID) FROM FACT_SUBSCRIPTION_CYCLE WHERE SUBSCRIPTION_STATE = 'active' AND IS_INTERNAL = FALSE
+    verified_by: "Dana Ruiz"
+    verified_at: 2026-07-18
+    uses_metrics: [active_subscribers]
+    handles_caveats: [C-02, C-04]
+    notes: |
+      Signed verified query from canonical project.
+
+  - name: monthly-churn-by-cohort
+    question: monthly_churn_by_cohort
+    sql: |
+      SELECT month, cancels / actives_at_start AS churn FROM churn_cohort WHERE IS_INTERNAL = FALSE
+    verified_by: "Dana Ruiz"
+    verified_at: 2026-07-18
+    uses_metrics: [monthly_churn_rate]
+    handles_caveats: [C-01, C-03]
+    notes: |
+      Signed verified query from canonical project.

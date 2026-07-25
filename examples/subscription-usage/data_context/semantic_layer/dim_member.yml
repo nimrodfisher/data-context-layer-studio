@@ -1,0 +1,43 @@
+# Generated from canonical project context. Prefer regenerating over hand-editing.
+
+version: 2
+
+models:
+  - name: dim_member
+    meta:
+      context_file: data_context/semantic_layer/dim_member.yml
+    database: ANALYTICS
+    schema: SUBS
+    description: |
+      One row per member with plan and internal flag. Grain: One row per member.
+    columns:
+      - name: MEMBER_ID
+        description: "Member primary key."
+        data_type: string
+        constraints:
+          - type: not_null
+
+      - name: PLAN_TIER
+        description: "1=monthly, 2=annual, 3=family (integer code, not a name)."
+        data_type: number
+        constraints:
+          - type: not_null
+
+      - name: IS_INTERNAL
+        description: "TRUE for staff/QA accounts; exclude from all metrics."
+        data_type: boolean
+        constraints:
+          - type: not_null
+
+    relationships:
+      - from_model: fact_member_session
+        from_column: MEMBER_ID
+        to_model: dim_member
+        to_column: MEMBER_ID
+        description: "session → member (many-to-one): FACT_MEMBER_SESSION.MEMBER_ID = DIM_MEMBER.MEMBER_ID"
+
+      - from_model: fact_subscription_cycle
+        from_column: MEMBER_ID
+        to_model: dim_member
+        to_column: MEMBER_ID
+        description: "cycle → member (many-to-one): FACT_SUBSCRIPTION_CYCLE.MEMBER_ID = DIM_MEMBER.MEMBER_ID"

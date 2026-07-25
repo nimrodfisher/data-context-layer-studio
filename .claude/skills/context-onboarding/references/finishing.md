@@ -41,17 +41,26 @@ keep every honest `TODO:`.
   decisions). Keep `status: draft` until an owner has actually signed off.
 - **`data_context/caveats.md`** — one entry per gotcha, each rated `BLOCKER` / `CORRECTION` /
   `NOTE`, with what to do about it.
-- **`data_context/semantic_layer/` and `table_profiling/`** — say "generate, don't hand-type" for
-  these; a hand-typed schema is wrong the day a column is added.
+- **`data_context/semantic_layer/`** — the exporter writes `_index.md` plus one `<table>.yml` per
+  table. Say "generate, don't hand-type" for these; a hand-typed schema is wrong the day a column
+  is added.
+- **`data_context/table_profiling/`** — the exporter writes `_index.md`, one `<table>.md` per table
+  (a stub marked `[not yet profiled]` until real data is added), and `scripts/profile_table.sql`.
+  Point the analyst at the script to fill the stubs.
 - **`recent_updates/`** — leave the freshness rule and ingestion contract intact.
 
-## Write two extra files
+## The two files that need the most attention
 
-**`POPULATING.md`** — a plain, ordered checklist of what's left to finish this specific skill and
-how (profile the tables, confirm the caveats, sign the metrics, sign the queries, wire recent
-updates). Written for a non-technical analyst. See `examples/` for the shape.
+Both of these are already **generated as a baseline** by `pnpm export:skill` — your job is to
+**polish**, not create from scratch.
 
-**`GOVERNANCE.md`** — suggested routines to keep the skill healthy. Recommendations, not wired
+**`POPULATING.md`** — the exporter writes a plain, ordered completion checklist (profile the tables,
+confirm the caveats, regenerate the semantic layer, sign the metrics, sign the queries, wire recent
+updates). Tighten it to this specific domain and keep it readable for a non-technical analyst. See
+`examples/subscription-usage/POPULATING.md` for the target.
+
+**`GOVERNANCE.md`** — **not** generated; you write it. Suggested routines to keep the skill healthy.
+Recommendations, not wired
 automation. For each: what it protects against, and how to set it up. Suggest:
 
 - **Freshness re-validation** — periodically run `pnpm export:skill <project.json> --validate-only`
