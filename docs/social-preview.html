@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #05070c; }
+  :root {
+    --ink: #0B0F17;
+    --panel: #131926;
+    --blue: #3B5BFF;
+    --blue-soft: #6C82FF;
+    --text: #E8ECF3;
+    --muted: #8A95A8;
+    --teal: #35D0A5;
+    --hair: rgba(255,255,255,0.08);
+  }
+  .card {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1280px;
+    height: 640px;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 520px at 88% -10%, rgba(59,91,255,0.22), transparent 60%),
+      radial-gradient(700px 500px at 10% 120%, rgba(53,208,165,0.08), transparent 60%),
+      var(--ink);
+    background-image:
+      radial-gradient(900px 520px at 88% -10%, rgba(59,91,255,0.22), transparent 60%),
+      radial-gradient(700px 500px at 10% 120%, rgba(53,208,165,0.08), transparent 60%),
+      radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size: auto, auto, 26px 26px;
+    color: var(--text);
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 40px;
+    padding: 68px 72px;
+  }
+
+  /* Left column */
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 15px; font-weight: 500; letter-spacing: 0.16em;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 30px;
+  }
+  .eyebrow .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 12px var(--teal); }
+
+  h1 {
+    font-size: 62px; font-weight: 700; line-height: 1.03; letter-spacing: -0.02em;
+    margin-bottom: 22px;
+  }
+  h1 .accent { color: var(--blue-soft); }
+  h1 .accent-underline {
+    color: #fff;
+    box-shadow: inset 0 -0.14em 0 rgba(59,91,255,0.55);
+  }
+
+  .sub {
+    font-size: 25px; font-weight: 500; line-height: 1.32; color: #C7CEDB;
+    max-width: 30ch; margin-bottom: 16px;
+  }
+  .sub b { color: #fff; font-weight: 600; }
+
+  .desc {
+    font-size: 17px; line-height: 1.45; color: var(--muted);
+    max-width: 34ch; margin-bottom: 30px;
+  }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 34px; }
+  .chip {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px; font-weight: 500; letter-spacing: 0.01em;
+    color: #C7CEDB;
+    padding: 8px 14px; border: 1px solid var(--hair); border-radius: 999px;
+    background: rgba(255,255,255,0.02);
+  }
+  .chip.mit { color: var(--teal); border-color: rgba(53,208,165,0.35); }
+
+  .repo {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 17px; font-weight: 500; color: #fff;
+    display: inline-flex; align-items: center; gap: 11px;
+  }
+  .repo .gh {
+    width: 22px; height: 22px; flex: none; fill: #fff; opacity: 0.9;
+  }
+
+  /* Right column — the signature: the skill artifact */
+  .panel-wrap { position: relative; display: flex; justify-content: center; }
+  .glow {
+    position: absolute; inset: -30px -10px -30px -10px;
+    background: radial-gradient(closest-side, rgba(59,91,255,0.35), transparent 78%);
+    filter: blur(10px);
+  }
+  .panel {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(180deg, #161d2c, #10151f);
+    border: 1px solid var(--hair);
+    border-radius: 16px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+    overflow: hidden;
+  }
+  .panel-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px; border-bottom: 1px solid var(--hair);
+    background: rgba(255,255,255,0.02);
+  }
+  .panel-bar .tl { width: 11px; height: 11px; border-radius: 50%; background: #2b3346; }
+  .panel-bar .name {
+    margin-left: 10px; font-family: "JetBrains Mono", monospace;
+    font-size: 13px; color: var(--muted); letter-spacing: 0.04em;
+  }
+  .tree {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 16.5px; line-height: 2.0;
+    padding: 22px 24px 18px;
+    white-space: pre;
+  }
+  .tree .dir { color: var(--blue-soft); }
+  .tree .file { color: #DCE3F0; }
+  .tree .tag { color: var(--muted); }
+  .tree .ok { color: var(--teal); }
+  .tree .fresh { color: var(--blue-soft); }
+  .caption {
+    padding: 0 24px 22px;
+    font-family: "Space Grotesk", sans-serif; font-style: italic;
+    font-size: 16px; color: var(--muted);
+  }
+  .caption b { color: var(--text); font-style: normal; font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="left">
+      <div class="eyebrow"><span class="dot"></span>Open source · Runs local · No telemetry</div>
+      <h1>Give your AI agents<br /><span class="accent-underline">a governed context layer</span>.</h1>
+      <p class="sub">Built by the data team — <b>not guessed by the model.</b></p>
+      <p class="desc">Turn scattered docs, dbt, and warehouse knowledge into a portable Claude / Cursor skill your agents load before answering data questions.</p>
+      <div class="chips">
+        <span class="chip">Claude</span>
+        <span class="chip">Cursor</span>
+        <span class="chip">MCP</span>
+        <span class="chip">dbt</span>
+        <span class="chip mit">MIT</span>
+      </div>
+      <div class="repo">
+        <svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        github.com/nimrodfisher/data-context-layer-studio
+      </div>
+    </div>
+
+    <div class="panel-wrap">
+      <div class="glow"></div>
+      <div class="panel">
+        <div class="panel-bar">
+          <span class="tl"></span><span class="tl"></span><span class="tl"></span>
+          <span class="name">SKILL.md — domain context</span>
+        </div>
+        <div class="tree"><span class="dir">your-domain/</span>
+├─ <span class="file">SKILL.md</span>              <span class="tag">routing map</span>
+├─ <span class="dir">data_context/</span>
+│  ├─ <span class="file">metrics.yml</span>        <span class="ok">✓ signed</span>
+│  ├─ <span class="file">caveats.md</span>         <span class="ok">✓ provenance</span>
+│  ├─ <span class="dir">semantic_layer/</span>    <span class="ok">✓ per-table</span>
+│  └─ <span class="dir">verified_queries/</span>  <span class="ok">✓ reviewed</span>
+└─ <span class="dir">recent_updates/</span>       <span class="fresh">⟳ fresh</span></div>
+        <div class="caption">A <b>map</b>, not an encyclopedia — agents load it before they answer.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

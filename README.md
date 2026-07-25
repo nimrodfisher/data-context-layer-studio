@@ -23,13 +23,7 @@ Curious what the result looks like? See a finished (fictional) example: [`exampl
 No hosted account. No telemetry. Credentials and MCP configs stay on your machine.
 
 <p align="center">
-  <img src="docs/images/workbench-review.png" alt="Lineage Workbench review screen showing section completeness, validation, and provenance coverage" width="900" />
-</p>
-
-<p align="center">
-  <img src="docs/images/context-layer-ui-walkthrough.gif" alt="Walkthrough: chat onboarding, domain evidence, metrics, review with zero validation errors, and skill export" width="900" />
-  <br />
-  <sub>From interview to reviewed, provenance-linked skill — one canonical model, exported to the skill file tree.</sub>
+  <img src="docs/images/how-it-works.png" alt="How it works: your scattered knowledge (docs, dbt, warehouse, Slack) is gathered and validated into one canonical project with provenance on every fact, exported to a domain skill (SKILL.md + leaf files), which the AI agent loads before it answers — grounded, not guessed" width="960" />
 </p>
 
 <p align="center">
@@ -81,6 +75,18 @@ Open [http://localhost:3000](http://localhost:3000).
 2. Refine Domain → Sources → Business → Data → Metrics → Caveats → Governance (drop files, paste notes, or ask the agent per section)  
 3. Run **Clarify** / **Review** until the Claude Code checklist is green  
 4. Click **Build skill with Claude Code** — or **Download raw ZIP** if you only want the deterministic template fill  
+
+### See it in action
+
+<p align="center">
+  <img src="docs/images/context-layer-ui-walkthrough.gif" alt="Walkthrough: chat onboarding, domain evidence, metrics, review with zero validation errors, and skill export" width="880" />
+  <br />
+  <sub>From interview to a reviewed, provenance-linked skill — one canonical model, exported to the skill file tree.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/images/workbench-review.png" alt="Lineage Workbench review screen showing section completeness, validation, and provenance coverage" width="880" />
+</p>
 
 ---
 
@@ -184,18 +190,20 @@ The conversational / polish path also writes two extra files: **`POPULATING.md`*
 
 ## How it works
 
+The [diagram at the top](#data-context-layer-studio) shows the end-to-end flow: your scattered
+knowledge → gather &amp; validate → one **canonical project** (provenance on every fact) → a
+**domain skill** → the agent loads it *before* it answers. Two ways to author, one output:
+
 ```text
-Sources you already have
-   │  markdown · paste · Cursor MCP · API · dbt (optional)
-   ▼
 Author the context — pick one, same result:
-   • Web workbench          (guided visual checklist)
-   • Conversational skill    (Claude/Cursor interviews you)
-   ▼
-Canonical project.json (local validate · clarify · save/load)
-   │
-   ├─► pnpm export:skill           → deterministic skill tree / ZIP (no LLM)
-   └─► Claude Code build / polish  → claude -p → polished skill
+  • Web workbench          (guided visual checklist)
+  • Conversational skill    (Claude/Cursor interviews you)
+        │
+        ▼
+  Canonical project.json (local validate · clarify · save/load)
+        │
+        ├─► pnpm export:skill           → deterministic skill tree / ZIP (no LLM)
+        └─► Claude Code build / polish  → claude -p → polished skill
 ```
 
 ### Chat + MCP connectors
