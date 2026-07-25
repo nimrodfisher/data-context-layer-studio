@@ -2,14 +2,23 @@
 
 **Give your AI agents a governed, domain-true context layer — built by the data team, not guessed by the model.**
 
-Data Context Layer Studio helps analytics and data teams turn scattered tribal knowledge (docs, warehouse MCPs, APIs, dbt) into a portable **Cursor / Claude domain skill**.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A5%2022-3c873a.svg" alt="Node 22+" />
+  <img src="https://img.shields.io/badge/local--first-no%20telemetry-6f42c1.svg" alt="Local-first, no telemetry" />
+  <a href="#contributing"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome" /></a>
+</p>
 
-Two ways to build that skill (same output shape):
+Data Context Layer Studio helps analytics and data teams turn scattered tribal knowledge (docs, warehouse MCPs, APIs, dbt) into a portable **Claude / Cursor domain skill** — a `SKILL.md` routing map plus leaf files an agent loads _before_ it answers a data question.
 
-| Mode | Status | Best for |
+**Two ways to build it, same output** — pick whichever fits your team:
+
+| Path | Best for | Start here |
 | --- | --- | --- |
-| **Workbench UI** | Available now | Analysts who want a guided checklist so no context piece is skipped, then Claude Code writes the skill |
-| **Conversational onboarding skill** | Available now | Teams who prefer Claude/Cursor interviewing them in chat and building the skill during the conversation |
+| 💬 **Conversational skill** | Teams who'd rather be interviewed in chat by Claude or Cursor | [Build it in conversation](#build-it-in-conversation) |
+| 🖥️ **Workbench UI** | Analysts who want a guided visual checklist so nothing is skipped | [Quick start](#quick-start) |
+
+Curious what the result looks like? See a finished (fictional) example: [`examples/subscription-usage/`](examples/subscription-usage/).
 
 No hosted account. No telemetry. Credentials and MCP configs stay on your machine.
 
@@ -160,7 +169,9 @@ your-domain/
 └── recent_updates/          # Freshness + ingestion contract
 ```
 
-Drop it into your agent skills directory (for example Cursor project skills) and agents get a map, not an encyclopedia.
+Drop it into your agent skills directory (for example `.claude/skills/` or your Cursor skills location) and agents get a map, not an encyclopedia.
+
+The conversational / polish path also writes two extra files: **`POPULATING.md`** (a plain checklist of what's left to finish the skill) and **`GOVERNANCE.md`** (suggested routines — freshness checks, update syncs, metric sign-off). See both in [`examples/subscription-usage/`](examples/subscription-usage/).
 
 ---
 
@@ -170,13 +181,14 @@ Drop it into your agent skills directory (for example Cursor project skills) and
 Sources you already have
    │  markdown · paste · Cursor MCP · API · dbt (optional)
    ▼
-Chat + guided authoring (checklist so nothing is skipped)
-   │
+Author the context — pick one, same result:
+   • Web workbench          (guided visual checklist)
+   • Conversational skill    (Claude/Cursor interviews you)
    ▼
-Canonical project (local validate · clarify · save/load)
+Canonical project.json (local validate · clarify · save/load)
    │
-   ├─► Claude Code build pack → claude -p → polished skill ZIP
-   └─► Raw deterministic ZIP (no Claude required)
+   ├─► pnpm export:skill           → deterministic skill tree / ZIP (no LLM)
+   └─► Claude Code build / polish  → claude -p → polished skill
 ```
 
 ### Chat + MCP connectors
@@ -224,7 +236,10 @@ pnpm TypeScript monorepo:
 | `packages/core` | Canonical model, validation, persistence |
 | `packages/sources` | Static / MCP / REST / dbt adapters |
 | `packages/agent` | Grounded drafting and clarification |
-| `packages/exporters` | Skill file generation + ZIP |
+| `packages/exporters` | Skill file generation + ZIP + the `export:skill` CLI |
+| `.claude/skills/context-onboarding` | The conversational onboarding skill |
+
+`pnpm export:skill <project.json> [--out <dir> \| --zip \| --validate-only]` renders a canonical project into the skill tree from the terminal — no web server required.
 
 ```sh
 corepack pnpm test        # unit tests
