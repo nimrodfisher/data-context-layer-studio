@@ -59,6 +59,8 @@ export function ReviewSection({ project, onEvidenceSelect }: Props) {
     async function validate() {
       setLoading(true);
       setFailed(false);
+      setJob(null);
+      setExportError(null);
       try {
         const response = await fetch('/api/review', {
           method: 'POST',
@@ -81,11 +83,6 @@ export function ReviewSection({ project, onEvidenceSelect }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [project]);
-
-  useEffect(() => {
-    setJob(null);
-    setExportError(null);
   }, [project]);
 
   useEffect(() => {

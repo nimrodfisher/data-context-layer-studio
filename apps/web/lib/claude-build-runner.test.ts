@@ -7,7 +7,7 @@ describe('claude build runner helpers', () => {
     const missing = await resolveClaudeBinary({
       CONTEXT_LAYER_CLAUDE_BIN: 'C:\\definitely-missing-claude-binary-xyz.exe',
       PATH: '',
-    } as NodeJS.ProcessEnv);
+    } as unknown as NodeJS.ProcessEnv);
     expect(missing).toBeUndefined();
   });
 
