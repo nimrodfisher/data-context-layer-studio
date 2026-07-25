@@ -1,0 +1,98 @@
+# Subscription Usage — metrics (fictional example)
+#
+# 📋 ANALYST — WHAT TO DO WITH THIS FILE:
+#   Every metric below is `status: draft`. The NAME is set; the AGREED DEFINITION is not.
+#   The verified queries already compute these, but nobody has signed the definition — so until
+#   you do, any question asking for one of these numbers is a STOP-AND-ASK.
+#
+#   For each metric:
+#     1. Read the verified query under `reference_query` — it encodes a working definition.
+#     2. Decide the open questions under `must_decide`.
+#     3. Name an `owner` (a PERSON, not a team).
+#     4. Fill `description` with prose + a WORKED EXAMPLE (real dates/numbers) + the literal SQL.
+#     5. Flip `status` to `agreed`.
+#   A domain is not done while anything here is still `draft`.
+
+metrics:
+
+  - name: trial_conversion_rate
+    synonyms: [trial-to-paid, T2P, conversion rate]
+    owner: dana@lumenfit.example   # Dana Ruiz
+    status: draft
+    reference_query: trial_to_paid_by_plan          # T1
+    description: |-
+      Share of trials that become paying subscribers.
+      Formula: COUNT(members who reached SUBSCRIPTION_STATE = 'active')
+             / COUNT(members who started a trial), within a cohort window.
+
+      Cohort = the month the trial STARTED (not the month it converted). A trial started in June
+      that converts in July counts in the June cohort.
+
+      Denominator excludes trials still in progress at the cohort cutoff — a trial that hasn't had
+      its full 14 days yet is neither converted nor failed. Wait for the window to close.
+
+      ⚠️ NOT YET SIGNED — resolve must_decide items before changing status to `agreed`.
+    must_decide:
+      - "DECIDED: Cohort by trial-start month, not conversion month."
+      - "OPEN: Do reactivated members (churned, then re-trialed) count as new trials, or are they
+         excluded? Dana to confirm with Lifecycle."
+    expr: paid_conversions / trials_started, by trial-start cohort
+
+  - name: active_subscribers
+    synonyms: [paying members, active subs, subscriber count]
+    owner: dana@lumenfit.example   # Dana Ruiz
+    status: draft
+    reference_query: active_subscribers_snapshot     # A1
+    description: |-
+      Count of members with SUBSCRIPTION_STATE = 'active' as of a point in time.
+      Excludes 'trialing', 'paused', 'cancelled', and internal accounts (IS_INTERNAL = FALSE).
+
+      Point-in-time by default (today). For a trend, snapshot per day/week and count actives at
+      each point — do NOT count distinct members over a range (that double-counts churned+rejoined).
+
+      ⚠️ Do not confuse with `active_minutes` — "active" here means PAYING, not ENGAGED. See C-04.
+    must_decide:
+      - "DECIDED: 'active' = SUBSCRIPTION_STATE = 'active'. Paused members are not active."
+      - "DECIDED: Point-in-time snapshot; no distinct-over-range counting."
+    expr: COUNT(DISTINCT MEMBER_ID) WHERE SUBSCRIPTION_STATE = 'active' AND IS_INTERNAL = FALSE
+
+  - name: active_minutes
+    synonyms: [engagement minutes, workout minutes, usage]
+    owner: priya@lumenfit.example   # Priya Shah
+    status: draft
+    reference_query: null
+    description: |-
+      Total in-app active minutes per member over a period, from FACT_MEMBER_SESSION.
+      Sum of SESSION_DURATION_SECONDS / 60 across sessions in the window.
+
+      "Active" here means ENGAGED (using the app), not subscribed. A paused subscriber can log
+      zero active minutes; a trial member can log many. Never use this as a subscriber count (C-04).
+
+      Sessions under 60 seconds are excluded as accidental opens (C-05).
+
+      ⚠️ NO reference query yet — the definition below is unverified. Build and sign one before use.
+    must_decide:
+      - "OPEN: Is a background/audio session (screen off) 'active'? Priya to decide with Product."
+      - "OPEN: Per-member headline, or total across members? Default proposed: per active member."
+    expr: SUM(SESSION_DURATION_SECONDS)/60 WHERE SESSION_DURATION_SECONDS >= 60
+
+  - name: monthly_churn_rate
+    synonyms: [churn, cancellation rate, logo churn]
+    owner: dana@lumenfit.example   # Dana Ruiz
+    status: draft
+    reference_query: monthly_churn_by_cohort          # C1
+    description: |-
+      Share of active subscribers at the start of a month who are cancelled by the end of it.
+      Formula: cancellations_in_month / active_subscribers_at_month_start.
+
+      Voluntary cancels and payment-failure churn are BOTH counted by default. If the question is
+      about "did people choose to leave", split on CANCELLATION_REASON and say which you used.
+
+      A pause is NOT a churn (C-03). A member who pauses and never returns churns only when the
+      subscription actually cancels.
+
+      ⚠️ NOT YET SIGNED — confirm the involuntary-churn treatment before status = `agreed`.
+    must_decide:
+      - "DECIDED: Denominator = actives at month start."
+      - "OPEN: Report voluntary + involuntary blended, or separately by default? Dana to decide."
+    expr: cancellations_in_month / active_subscribers_at_month_start, IS_INTERNAL = FALSE

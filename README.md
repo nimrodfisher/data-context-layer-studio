@@ -9,7 +9,7 @@ Two ways to build that skill (same output shape):
 | Mode | Status | Best for |
 | --- | --- | --- |
 | **Workbench UI** | Available now | Analysts who want a guided checklist so no context piece is skipped, then Claude Code writes the skill |
-| **Conversational onboarding skill** | Coming soon | Teams who prefer Claude interviewing them in chat and creating the skill during the conversation |
+| **Conversational onboarding skill** | Available now | Teams who prefer Claude/Cursor interviewing them in chat and building the skill during the conversation |
 
 No hosted account. No telemetry. Credentials and MCP configs stay on your machine.
 
@@ -19,6 +19,7 @@ No hosted account. No telemetry. Credentials and MCP configs stay on your machin
 
 <p align="center">
   <a href="#quick-start"><strong>Quick start</strong></a> ·
+  <a href="#build-it-in-conversation"><strong>Build it in conversation</strong></a> ·
   <a href="#try-the-claude-code-build"><strong>Try Claude Code build</strong></a> ·
   <a href="#what-you-get"><strong>What you get</strong></a> ·
   <a href="#how-it-works"><strong>How it works</strong></a> ·
@@ -65,6 +66,47 @@ Open [http://localhost:3000](http://localhost:3000).
 2. Refine Domain → Sources → Business → Data → Metrics → Caveats → Governance (drop files, paste notes, or ask the agent per section)  
 3. Run **Clarify** / **Review** until the Claude Code checklist is green  
 4. Click **Build skill with Claude Code** — or **Download raw ZIP** if you only want the deterministic template fill  
+
+---
+
+## Build it in conversation
+
+Prefer to be **interviewed** instead of filling in a UI? Open this repo in **Claude Code** or
+**Cursor** and let the agent walk you through it. Same output as the UI — a polished skill folder.
+
+1. Clone and install (the [Quick start](#quick-start) steps above), then open the folder in Claude
+   Code or Cursor.
+2. Invoke the onboarding skill — in Claude Code, run `/context-onboarding` (or just ask:
+   *"help me build a context skill for my domain"*).
+3. Answer a handful of short questions. The agent reads the docs and tables you point it at,
+   captures evidence, and writes a `project.json`.
+4. It runs one command to generate the skill, then polishes it:
+
+   ```sh
+   pnpm export:skill ./<your-domain>.project.json --out ./<your-domain>-skill
+   ```
+
+5. Drop the resulting `<your-domain>/` folder into your agent's skills directory.
+
+The skill lives in [`.claude/skills/context-onboarding/`](.claude/skills/context-onboarding/) and
+is written for non-technical analysts — short questions, plain language, nothing invented.
+
+**Using Cursor?** Point Cursor at the same folder, or copy
+`.claude/skills/context-onboarding/` into your Cursor skills/rules location. The steps are identical.
+
+See a finished example (fictional) under [`examples/subscription-usage/`](examples/subscription-usage/)
+— that's the quality bar the polish step aims at.
+
+### Just the exporter
+
+`pnpm export:skill` turns any canonical `project.json` into the skill file tree without the web
+server — handy in scripts or CI:
+
+```sh
+pnpm export:skill project.json --out ./skill      # write the folder tree
+pnpm export:skill project.json --zip              # write a <domain>-skill.zip
+pnpm export:skill project.json --validate-only    # check it, write nothing
+```
 
 ---
 
@@ -219,7 +261,7 @@ Want a new connector? Start from `packages/sources` and register it with the ada
 - [x] Per-section file / paste / agent ingest  
 - [x] Skill ZIP export matching the domain template  
 - [x] Claude Code handoff (checklist → build pack → `claude -p` → polished ZIP)  
-- [ ] **Conversational onboarding skill** — Claude interviews the analyst and creates the skill in chat (same output shape as the UI)  
+- [x] **Conversational onboarding skill** — Claude/Cursor interviews the analyst and builds the skill in chat (same output shape as the UI)  
 - [ ] Connected skill testing (ask business questions, inspect traces)  
 - [ ] Richer live MCP auth flows (OAuth-backed servers)  
 - [ ] Contributor docs, examples pack, and release automation  

@@ -7,6 +7,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@context-layer/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@context-layer/exporters':
+        specifier: workspace:*
+        version: link:packages/exporters
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.5
